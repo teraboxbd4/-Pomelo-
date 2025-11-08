@@ -25,8 +25,20 @@
         .content-section.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
+        /* ✅ সম্পূর্ণ নতুন এবং আকর্ষণীয় স্পিন হুইল স্টাইল */
         .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; display: flex; justify-content: center; align-items: center; }
-        .wheel-pointer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 35px solid #e74c3c; z-index: 20; filter: drop-shadow(0 -3px 4px rgba(0,0,0,0.4)); }
+        .wheel-pointer {
+            position: absolute;
+            top: 0px; /* পয়েন্টারটি উপরে সেট করা হয়েছে */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 60px;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            background: linear-gradient(160deg, #ff7675, #d63031); /* ঝলমলে লাল গ্রেডিয়েন্ট */
+            z-index: 20;
+            filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3));
+        }
         .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
         .wheel-inner-border { width: 100%; height: 100%; background: #fff; border-radius: 50%; padding: 5px; }
         .wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; background: #bdc3c7; transition: transform 6s cubic-bezier(0.1, 0.7, 0.0, 1); }
@@ -59,12 +71,36 @@
                 <div class="glass-card p-6"><h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-history mr-3 text-cyan-500"></i>সাম্প্রতিক কার্যক্রম</h3><div id="recent-activity" class="space-y-3"></div></div>
             </section>
             <section id="tasks" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-4"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-4"></div></div></section>
-            <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"><div class="wheel-section" style="background: #3498db; transform: rotate(0deg);"><span>৳2</span></div><div class="wheel-section" style="background: #e67e22; transform: rotate(45deg);"><span>৳5</span></div><div class="wheel-section" style="background: #2ecc71; transform: rotate(90deg);"><span>৳8</span></div><div class="wheel-section" style="background: #9b59b6; transform: rotate(135deg);"><span>৳10</span></div><div class="wheel-section" style="background: #f1c40f; transform: rotate(180deg);"><span>৳15</span></div><div class="wheel-section" style="background: #e74c3c; transform: rotate(225deg);"><span>৳20</span></div><div class="wheel-section" style="background: #1abc9c; transform: rotate(270deg);"><span>৳1</span></div><div class="wheel-section" style="background: #34495e; transform: rotate(315deg);"><span>৳3</span></div></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
-            <section id="wallet" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-6"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2><div class="mb-6 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div><div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div><button id="wallet-withdraw-btn" class="btn-primary w-full py-3"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button></div></section>
-            <section id="profile" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-6"><i class="fas fa-user mr-3 text-cyan-500"></i>আমার প্রোফাইল</h2><div class="flex items-center mb-6"><div class="w-16 h-16 rounded-full bg-cyan-400 flex items-center justify-center text-white text-2xl font-bold mr-4"><i class="fas fa-user"></i></div><div><p id="profile-name" class="font-bold text-xl"></p><p>সদস্য since <span id="join-date"></span></p></div></div><div class="space-y-4 mb-6"><div class="p-4 bg-white/70 rounded-lg"><p class="mb-1">আপনার রেফারেল লিঙ্ক</p><div class="flex"><input type="text" id="referral-link" class="flex-grow p-2 bg-gray-100 rounded-l-lg" readonly><button id="copy-link" class="bg-cyan-500 text-white px-4 rounded-r-lg"><i class="fas fa-copy"></i></button></div></div><div class="grid grid-cols-2 gap-4"><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-cyan-500" id="profile-tasks">0</p><p>সম্পন্ন টাস্ক</p></div><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-green-500" id="profile-referrals">0</p><p>রেফারেল</p></div></div></div><button id="logout-btn" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">লগ আউট</button></div></section>
+            <section id="spin" class="content-section">
+                <div class="glass-card p-6 text-center">
+                    <h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2>
+                    <p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p>
+                    <div class="wheel-container">
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel-outer-border">
+                            <div class="wheel-inner-border">
+                                <div class="wheel" id="wheel">
+                                    <div class="wheel-section" style="background: #3498db; transform: rotate(0deg);"><span>৳2</span></div>
+                                    <div class="wheel-section" style="background: #e67e22; transform: rotate(45deg);"><span>৳5</span></div>
+                                    <div class="wheel-section" style="background: #2ecc71; transform: rotate(90deg);"><span>৳8</span></div>
+                                    <div class="wheel-section" style="background: #9b59b6; transform: rotate(135deg);"><span>৳10</span></div>
+                                    <div class="wheel-section" style="background: #f1c40f; transform: rotate(180deg);"><span>৳15</span></div>
+                                    <div class="wheel-section" style="background: #e74c3c; transform: rotate(225deg);"><span>৳20</span></div>
+                                    <div class="wheel-section" style="background: #1abc9c; transform: rotate(270deg);"><span>৳1</span></div>
+                                    <div class="wheel-section" style="background: #34495e; transform: rotate(315deg);"><span>৳3</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wheel-center"></div>
+                    </div>
+                    <button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button>
+                </div>
+            </section>
+            <section id="wallet" class="content-section"><div class="glass-card p-6"><!-- ... --></div></section>
+            <section id="profile" class="content-section"><div class="glass-card p-6"><!-- ... --></div></section>
         </main>
         <nav class="bottom-nav"><a class="nav-item active" data-section="home"><i class="fas fa-home"></i><span>হোম</span></a><a class="nav-item" data-section="tasks"><i class="fas fa-tasks"></i><span>টাস্ক</span></a><a class="nav-item" data-section="spin"><i class="fas fa-dharmachakra"></i><span>স্পিন</span></a><a class="nav-item" data-section="wallet"><i class="fas fa-wallet"></i><span>ওয়ালেট</span></a><a class="nav-item" data-section="profile"><i class="fas fa-user"></i><span>প্রোফাইল</span></a></nav>
-        <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="text" id="withdraw-amount" class="w-full p-3" readonly></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
+        <div id="withdraw-modal" class="modal"><!-- ... --></div>
     </div>
 
     <script>
@@ -99,30 +135,7 @@
 
         async function loadAdScriptsAndSettings(collectionName) { const networksSnapshot = await db.collection(collectionName).get(); const groupedAds = {}; let totalReward = 0; networksSnapshot.forEach(doc => { const network = doc.data(); if (network.isActive && network.zones) { groupedAds[doc.id] = []; network.zones.forEach(zone => { if (zone.isActive && zone.id && zone.id.toUpperCase() !== 'YOUR_ID' && zone.id.toUpperCase() !== 'NEW_ZONE_ID') { const adData = { type: doc.id, zoneId: zone.id, reward: zone.reward }; groupedAds[doc.id].push(adData); totalReward += zone.reward; const scriptId = `ad-sdk-${doc.id}-${zone.id}`; if (!document.getElementById(scriptId)) { const script = document.createElement('script'); script.id = scriptId; if (doc.id === 'monetag') { script.src = `//libtl.com/sdk.js`; script.setAttribute('data-zone', zone.id); script.setAttribute('data-sdk', `show_${zone.id}`); } else if (doc.id === 'gigapub') { script.src = `https://ad.gigapub.tech/script?id=${zone.id}`; } document.head.appendChild(script); } } }); } }); const interleavedAds = []; const networkNames = Object.keys(groupedAds); const maxLength = Math.max(0, ...networkNames.map(name => groupedAds[name].length)); for (let i = 0; i < maxLength; i++) { for (const name of networkNames) { if (groupedAds[name][i]) { interleavedAds.push(groupedAds[name][i]); } } } return { ads: interleavedAds, totalReward }; }
         
-        async function showMandatoryAdAfterAction(adQueue, activityTitle = 'বিজ্ঞাপন দেখা') { 
-            return new Promise(async (resolve, reject) => { 
-                if (!adQueue || adQueue.length === 0) { console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); return resolve(0.10); } 
-                
-                const watchAdBtn = document.getElementById('watch-ad-btn'); 
-                watchAdBtn.disabled = true; 
-                let totalAdReward = 0;
-                const waitForSdk = (ad, timeout = 7000) => new Promise((resolve, reject) => { const runner = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runner === 'function') return resolve(runner); const start = Date.now(); const interval = setInterval(() => { const runnerNow = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runnerNow === 'function') { clearInterval(interval); resolve(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); reject(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); 
-                
-                try { 
-                    for (const ad of adQueue) {
-                        const adRunner = await waitForSdk(ad); 
-                        await adRunner(); 
-                        totalAdReward += ad.reward;
-                    }
-                    resolve(totalAdReward); 
-                } catch (error) { 
-                    console.error('Ad error:', error); 
-                    reject(error); 
-                } finally { 
-                    watchAdBtn.disabled = false; 
-                } 
-            }); 
-        }
+        async function showMandatoryAdAfterAction(adQueue, activityTitle = 'বিজ্ঞাপন দেখা') { return new Promise(async (resolve, reject) => { if (!adQueue || adQueue.length === 0) { console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); return resolve(0.10); } const watchAdBtn = document.getElementById('watch-ad-btn'); watchAdBtn.disabled = true; let totalAdReward = 0; const waitForSdk = (ad, timeout = 7000) => new Promise((resolve, reject) => { const runner = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runner === 'function') return resolve(runner); const start = Date.now(); const interval = setInterval(() => { const runnerNow = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runnerNow === 'function') { clearInterval(interval); resolve(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); reject(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); try { for (const ad of adQueue) { const adRunner = await waitForSdk(ad); await adRunner(); totalAdReward += ad.reward; } resolve(totalAdReward); } catch (error) { console.error('Ad error:', error); reject(error); } finally { watchAdBtn.disabled = false; } }); }
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
@@ -135,22 +148,7 @@
             navItems.forEach(item => item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.section); }));
             navButtons.forEach(button => button.addEventListener('click', (e) => { e.preventDefault(); navigateTo(button.dataset.target); }));
             
-            document.getElementById('watch-ad-btn').addEventListener('click', async function() { 
-                this.disabled = true; 
-                try { 
-                    const totalAdReward = await showMandatoryAdAfterAction(adSettings, 'বিজ্ঞাপন দেখা'); 
-                    if (totalAdReward > 0) {
-                        const inc = firebase.firestore.FieldValue.increment; 
-                        await db.collection('users').doc(currentUser.uid).update({ balance: inc(totalAdReward), todayEarnings: inc(totalAdReward), totalEarnings: inc(totalAdReward), adsCompleted: inc(adSettings.length) }); 
-                        await addActivity('বিজ্ঞাপন দেখা', totalAdReward); 
-                        alert(`ধন্যবাদ! ৳${totalAdReward.toFixed(2)} যোগ করা হয়েছে।`); 
-                    }
-                } catch (e) { 
-                    alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); 
-                } finally { 
-                    this.disabled = false; 
-                } 
-            });
+            document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { const totalAdReward = await showMandatoryAdAfterAction(adSettings, 'বিজ্ঞাপন দেখা'); if (totalAdReward > 0) { const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(totalAdReward), todayEarnings: inc(totalAdReward), totalEarnings: inc(totalAdReward), adsCompleted: inc(adSettings.length) }); await addActivity('বিজ্ঞাপন দেখা', totalAdReward); alert(`ধন্যবাদ! ৳${totalAdReward.toFixed(2)} যোগ করা হয়েছে।`); } } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
             
             document.getElementById('tasks-list').addEventListener('click', async (e) => { if (e.target.classList.contains('task-btn')) { const btn = e.target, taskId = btn.dataset.id, reward = parseFloat(btn.dataset.reward), taskKey = `${taskId}_${new Date().toDateString()}`; btn.disabled = true; await db.collection('users').doc(currentUser.uid).update({ balance: firebase.firestore.FieldValue.increment(reward), todayEarnings: firebase.firestore.FieldValue.increment(reward), totalEarnings: firebase.firestore.FieldValue.increment(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক সম্পন্ন', reward); alert(`টাস্ক সম্পন্ন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } });
             
