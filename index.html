@@ -26,8 +26,11 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; display: flex; justify-content: center; align-items: center; }
-        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background-color: #e74c3c; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; border: 8px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.2); transition: transform 6s cubic-bezier(0.25, 1, 0.45, 1); }
+        .wheel-pointer { position: absolute; top: 0px; left: 50%; transform: translateX(-50%); width: 50px; height: 60px; clip-path: polygon(50% 100%, 0 0, 100% 0); background: linear-gradient(160deg, #ff7675, #d63031); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
+        .wheel-wrapper { width: 100%; height: 100%; position: relative; transition: transform 6s cubic-bezier(0.1, 0.7, 0.0, 1); }
+        .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
+        .wheel-inner-border { width: 100%; height: 100%; background: #fff; border-radius: 50%; padding: 5px; position: relative; }
+        .wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; background: #bdc3c7; }
         .wheel-section { position: absolute; width: 50%; height: 50%; transform-origin: bottom right; clip-path: polygon(0 0, 100% 0, 100% 100%); display: flex; align-items: center; justify-content: center; }
         .wheel-section span { display: block; transform: rotate(22.5deg) translateY(-100%); color: white; font-weight: 700; font-size: 20px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
         .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: radial-gradient(circle, #ffd700, #f0c000); border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 15; }
