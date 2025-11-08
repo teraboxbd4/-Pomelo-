@@ -14,7 +14,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; }
         body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow-x: hidden; position: relative; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 80%, rgba(135, 206, 235, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(152, 251, 152, 0.3) 0%, transparent 50%); z-index: -1; }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
         .btn-primary { background: linear-gradient(135deg, #00CED1, #20B2AA); color: white; border-radius: 16px; padding: 14px 24px; font-weight: bold; transition: all 0.3s ease; border: none; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -24,7 +23,7 @@
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .wheel-container { position: relative; width: 300px; height: 300px; margin: 20px auto; }
         .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background-color: #e74c3c; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
@@ -100,12 +99,8 @@
         
         async function showMandatoryAdAfterAction(adQueue, activityTitle = 'বিজ্ঞাপন দেখা') { 
             return new Promise(async (resolve, reject) => { 
-                if (!adQueue || adQueue.length === 0) { 
-                    console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); 
-                    return resolve(0.10); 
-                } 
+                if (!adQueue || adQueue.length === 0) { console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); return resolve(0.10); } 
                 
-                // ✅ র‍্যান্ডম পদ্ধতিতে বিজ্ঞাপন বেছে নেওয়া
                 const adIndex = Math.floor(Math.random() * adQueue.length); 
                 const adToShow = adQueue[adIndex]; 
                 
