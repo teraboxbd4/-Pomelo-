@@ -100,22 +100,23 @@
         async function showMandatoryAdAfterAction(adQueue, activityTitle = 'বিজ্ঞাপন দেখা') { 
             return new Promise(async (resolve, reject) => { 
                 if (!adQueue || adQueue.length === 0) { console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); return resolve(0.10); } 
-                
-                const adIndex = Math.floor(Math.random() * adQueue.length); 
-                const adToShow = adQueue[adIndex]; 
-                
-                document.getElementById('watch-ad-btn').disabled = true; 
+                const watchAdBtn = document.getElementById('watch-ad-btn'); 
+                watchAdBtn.disabled = true; 
+                let totalAdReward = 0;
                 const waitForSdk = (ad, timeout = 7000) => new Promise((resolve, reject) => { const runner = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runner === 'function') return resolve(runner); const start = Date.now(); const interval = setInterval(() => { const runnerNow = ad.type === 'monetag' ? window[`show_${ad.zoneId}`] : window.showGiga; if (typeof runnerNow === 'function') { clearInterval(interval); resolve(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); reject(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); 
                 
                 try { 
-                    const adRunner = await waitForSdk(adToShow); 
-                    await adRunner(); 
-                    resolve(adToShow.reward); 
+                    for (const ad of adQueue) {
+                        const adRunner = await waitForSdk(ad); 
+                        await adRunner(); 
+                        totalAdReward += ad.reward;
+                    }
+                    resolve(totalAdReward); 
                 } catch (error) { 
                     console.error('Ad error:', error); 
                     reject(error); 
                 } finally { 
-                    document.getElementById('watch-ad-btn').disabled = false; 
+                    watchAdBtn.disabled = false; 
                 } 
             }); 
         }
@@ -131,7 +132,22 @@
             navItems.forEach(item => item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.section); }));
             navButtons.forEach(button => button.addEventListener('click', (e) => { e.preventDefault(); navigateTo(button.dataset.target); }));
             
-            document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { const adReward = await showMandatoryAdAfterAction(adSettings, 'বিজ্ঞাপন দেখা'); const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(adReward), todayEarnings: inc(adReward), totalEarnings: inc(adReward), adsCompleted: inc(1) }); await addActivity('বিজ্ঞাপন দেখা', adReward); alert(`ধন্যবাদ! ৳${adReward.toFixed(2)} যোগ করা হয়েছে।`); } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
+            document.getElementById('watch-ad-btn').addEventListener('click', async function() { 
+                this.disabled = true; 
+                try { 
+                    const totalAdReward = await showMandatoryAdAfterAction(adSettings, 'বিজ্ঞাপন দেখা'); 
+                    if (totalAdReward > 0) {
+                        const inc = firebase.firestore.FieldValue.increment; 
+                        await db.collection('users').doc(currentUser.uid).update({ balance: inc(totalAdReward), todayEarnings: inc(totalAdReward), totalEarnings: inc(totalAdReward), adsCompleted: inc(adSettings.length) }); 
+                        await addActivity('বিজ্ঞাপন দেখা', totalAdReward); 
+                        alert(`ধন্যবাদ! ৳${totalAdReward.toFixed(2)} যোগ করা হয়েছে।`); 
+                    }
+                } catch (e) { 
+                    alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); 
+                } finally { 
+                    this.disabled = false; 
+                } 
+            });
             
             document.getElementById('tasks-list').addEventListener('click', async (e) => { if (e.target.classList.contains('task-btn')) { const btn = e.target, taskId = btn.dataset.id, reward = parseFloat(btn.dataset.reward), taskKey = `${taskId}_${new Date().toDateString()}`; btn.disabled = true; await db.collection('users').doc(currentUser.uid).update({ balance: firebase.firestore.FieldValue.increment(reward), todayEarnings: firebase.firestore.FieldValue.increment(reward), totalEarnings: firebase.firestore.FieldValue.increment(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক সম্পন্ন', reward); alert(`টাস্ক সম্পন্ন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } });
             
@@ -148,12 +164,12 @@
                 wheel.style.transform = `rotate(${targetAngle}deg)`;
                 
                 setTimeout(async () => {
-                    alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে একটি বিজ্ঞাপন দেখুন।`);
+                    alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে বিজ্ঞাপনগুলো দেখুন।`);
                     let adWasSuccessful = false;
                     try {
-                        const adReward = await showMandatoryAdAfterAction(spinAdSettings, 'স্পিন বিজ্ঞাপন');
+                        const totalAdReward = await showMandatoryAdAfterAction(spinAdSettings, 'স্পিন বিজ্ঞাপন');
                         adWasSuccessful = true;
-                        const totalReward = prizeAmount + adReward; const inc = firebase.firestore.FieldValue.increment;
+                        const totalReward = prizeAmount + totalAdReward; const inc = firebase.firestore.FieldValue.increment;
                         await db.collection('users').doc(currentUser.uid).update({ balance: inc(totalReward), todayEarnings: inc(totalReward), totalEarnings: inc(totalReward), spinsUsed: inc(1) });
                         await addActivity('স্পিন ও বিজ্ঞাপন থেকে আয়', totalReward);
                         alert(`সফল! আপনার অ্যাকাউন্টে মোট ৳${totalReward.toFixed(2)} যোগ করা হয়েছে।`);
