@@ -102,6 +102,7 @@
         async function showMandatoryAdAfterAction(adQueue, activityTitle = 'বিজ্ঞাপন দেখা') { 
             return new Promise(async (resolve, reject) => { 
                 if (!adQueue || adQueue.length === 0) { console.log('কোনো বিজ্ঞাপন নেই। ডিফল্ট পুরস্কার দেওয়া হচ্ছে।'); return resolve(0.10); } 
+                
                 const watchAdBtn = document.getElementById('watch-ad-btn'); 
                 watchAdBtn.disabled = true; 
                 let totalAdReward = 0;
