@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Click2Cash 🍋 </title>
-    <!-- Firebase SDK, Tailwind CSS, Font Awesome, Google Fonts -->
+    <!-- Firebase SDK, Telegram SDK, Tailwind CSS, Font Awesome, Google Fonts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -123,37 +124,47 @@
             const userDoc = await userRef.get();
             if (userDoc.exists) return userDoc.data();
 
-            let ref = null;
-            try {
-                if(window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.ready();
-                    const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
-                    if (startParam && startParam.startsWith('ref_')) {
-                        ref = startParam.substring(4);
-                    }
-                }
-            } catch (e) { console.error("Telegram WebApp API error:", e); }
-            
-            const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false };
+            const ref = sessionStorage.getItem('referralCode') || null;
+
+            const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref, isBanned: false };
             await userRef.set(newUserData);
 
             if (ref && appSettings.referralBonus > 0) {
                 const referrerRef = db.collection('users').doc(ref);
                 const referralBonus = appSettings.referralBonus;
                 try {
-                    await db.runTransaction(async (t) => { const doc = await t.get(referrerRef); if (doc.exists) { t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) }); } });
-                    await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
-                } catch (error) { console.error("Error giving referral bonus:", error); }
+                    let bonusGiven = false;
+                    await db.runTransaction(async (t) => { 
+                        const doc = await t.get(referrerRef); 
+                        if (doc.exists && !doc.data().isBanned) { 
+                            t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) });
+                            bonusGiven = true;
+                        } 
+                    });
+                    if (bonusGiven) {
+                        await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
+                        alert(`রেজিস্ট্রেশন সফল হয়েছে! রেফারেলের জন্য বোনাস দেওয়া হয়েছে।`);
+                    } else {
+                         alert(`রেজিস্ট্রেশন সফল হয়েছে, কিন্তু রেফারেল কোডটি সঠিক না হওয়ায় বোনাস দেওয়া সম্ভব হয়নি।`);
+                    }
+                } catch (error) { 
+                    console.error("Error giving referral bonus:", error);
+                    alert('রেজিস্ট্রেশন সফল হয়েছে, কিন্তু বোনাস দেওয়ার সময় একটি সমস্যা হয়েছে।');
+                }
+            } else {
+                alert('রেজিস্ট্রেশন সফল হয়েছে!');
             }
+            
+            sessionStorage.removeItem('referralCode');
             return newUserData;
         }
         
-        const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { if(doc.data().isBanned){ alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে।'); auth.signOut(); } else { userData = doc.data(); updateAllUI(); } } }); };
+        const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { if(doc.data().isBanned){ alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে।'); auth.signOut(); } else { userData = doc.data(); updateAllUI(); } } else { auth.signOut(); } }); };
         
         async function addActivity(title, amount) { if (amount > 0) { await db.collection('activities').add({ userId: currentUser.uid, title, amount, timestamp: new Date().toISOString() }); } }
         async function addNotification(title, message, forUserId = null) { await db.collection('notifications').add({ userId: forUserId || currentUser.uid, title, message, timestamp: new Date().toISOString(), read: false }); }
 
-        function updateAllUI() { if (!userData || !appSettings) return; ['wallet-balance', 'header-balance', 'wallet-total'].forEach(id => document.getElementById(id).textContent = (userData.balance || 0).toFixed(2)); ['today-earnings', 'wallet-today'].forEach(id => document.getElementById(id).textContent = (userData.todayEarnings || 0).toFixed(2)); document.getElementById('referral-count').textContent = userData.referrals || 0; document.getElementById('wallet-referral').textContent = (userData.referralEarnings || 0).toFixed(2); document.getElementById('user-name').textContent = userData.name; document.getElementById('profile-name').textContent = userData.name; document.getElementById('join-date').textContent = new Date(userData.joinDate).toLocaleDateString('bn-BD'); const botUsername = appSettings.botUsername; if (botUsername) { document.getElementById('referral-link').value = `https://t.me/${botUsername}?start=ref_${currentUser.uid}`; } else { document.getElementById('referral-link').value = 'রেফারেল লিংক недоступен'; } document.getElementById('profile-tasks').textContent = (userData.tasksCompleted || []).filter(key => key.endsWith(new Date().toDateString())).length; document.getElementById('profile-referrals').textContent = userData.referrals || 0; document.getElementById('min-withdrawal-text').textContent = (appSettings.minWithdrawal || 50).toFixed(2); document.getElementById('watch-ad-notice').textContent = appSettings.watchAdNotice || ''; document.getElementById('do-task-notice').textContent = appSettings.doTaskNotice || ''; document.getElementById('spin-wheel-notice').textContent = appSettings.spinWheelNotice || ''; document.getElementById('referral-notice').textContent = appSettings.referralNotice || (appSettings.referralBonus ? `৳${appSettings.referralBonus.toFixed(2)} বোনাস পান` : ''); document.getElementById('daily-spin-limit-text').textContent = appSettings.dailySpins || 3; const today = new Date().toDateString(); if (userData.lastSpinDate !== today) { db.collection('users').doc(currentUser.uid).update({ spinsUsed: 0, lastSpinDate: today }); } const spinsUsed = userData.spinsUsed || 0; document.getElementById('spins-left').textContent = (appSettings.dailySpins || 3) - spinsUsed; document.getElementById('spin-wheel-btn').disabled = spinsUsed >= (appSettings.dailySpins || 3); const canWithdraw = userData.balance >= (appSettings.minWithdrawal || 50); ['withdraw-btn-home', 'wallet-withdraw-btn'].forEach(id => document.getElementById(id).disabled = !canWithdraw); updateTasksList(); updateRecentActivities(); }
+        function updateAllUI() { if (!userData || !appSettings) return; ['wallet-balance', 'header-balance', 'wallet-total'].forEach(id => document.getElementById(id).textContent = (userData.balance || 0).toFixed(2)); ['today-earnings', 'wallet-today'].forEach(id => document.getElementById(id).textContent = (userData.todayEarnings || 0).toFixed(2)); document.getElementById('referral-count').textContent = userData.referrals || 0; document.getElementById('wallet-referral').textContent = (userData.referralEarnings || 0).toFixed(2); document.getElementById('user-name').textContent = userData.name; document.getElementById('profile-name').textContent = userData.name; document.getElementById('join-date').textContent = new Date(userData.joinDate).toLocaleDateString('bn-BD'); const botUsername = appSettings.botUsername; if (botUsername && currentUser) { document.getElementById('referral-link').value = `https://t.me/${botUsername}?start=ref_${currentUser.uid}`; } else { document.getElementById('referral-link').value = 'রেফারেল লিংক недоступен'; } document.getElementById('profile-tasks').textContent = (userData.tasksCompleted || []).filter(key => key.endsWith(new Date().toDateString())).length; document.getElementById('profile-referrals').textContent = userData.referrals || 0; document.getElementById('min-withdrawal-text').textContent = (appSettings.minWithdrawal || 50).toFixed(2); document.getElementById('watch-ad-notice').textContent = appSettings.watchAdNotice || ''; document.getElementById('do-task-notice').textContent = appSettings.doTaskNotice || ''; document.getElementById('spin-wheel-notice').textContent = appSettings.spinWheelNotice || ''; document.getElementById('referral-notice').textContent = appSettings.referralNotice || (appSettings.referralBonus ? `৳${appSettings.referralBonus.toFixed(2)} বোনাস পান` : ''); document.getElementById('daily-spin-limit-text').textContent = appSettings.dailySpins || 3; const today = new Date().toDateString(); if (userData.lastSpinDate !== today) { db.collection('users').doc(currentUser.uid).update({ spinsUsed: 0, lastSpinDate: today }); } const spinsUsed = userData.spinsUsed || 0; document.getElementById('spins-left').textContent = (appSettings.dailySpins || 3) - spinsUsed; document.getElementById('spin-wheel-btn').disabled = spinsUsed >= (appSettings.dailySpins || 3); const canWithdraw = userData.balance >= (appSettings.minWithdrawal || 50); ['withdraw-btn-home', 'wallet-withdraw-btn'].forEach(id => document.getElementById(id).disabled = !canWithdraw); updateTasksList(); updateRecentActivities(); }
         
         const getTasksToClaim = () => JSON.parse(sessionStorage.getItem('tasksToClaim')) || [];
         const addTaskToClaim = (taskId) => { const tasks = getTasksToClaim(); if (!tasks.includes(taskId)) { tasks.push(taskId); sessionStorage.setItem('tasksToClaim', JSON.stringify(tasks)); } };
@@ -167,10 +178,29 @@
         async function loadAdScriptsAndSettings(collectionName) { const networksSnapshot = await db.collection(collectionName).get(); const groupedAds = {}; networksSnapshot.forEach(doc => { const network = doc.data(); if (network.isActive && network.zones) { groupedAds[doc.id] = []; network.zones.forEach(zone => { if (zone.isActive && zone.id && zone.id.toUpperCase() !== 'YOUR_ID' && zone.id.toUpperCase() !== 'NEW_ZONE_ID') { const adData = { type: doc.id, zoneId: zone.id }; groupedAds[doc.id].push(adData); const scriptId = `ad-sdk-${doc.id}-${zone.id}`; if (!document.getElementById(scriptId)) { const script = document.createElement('script'); script.id = scriptId; if (doc.id === 'monetag') { script.src = `//libtl.com/sdk.js`; script.setAttribute('data-zone', zone.id); script.setAttribute('data-sdk', `show_${zone.id}`); } else if (doc.id === 'gigapub') { script.src = `https://ad.gigapub.tech/script?id=${zone.id}`; } else if (doc.id === 'adexora') { script.src = `https://adexora.com/cdn/ads.js?id=${zone.id}`; } document.head.appendChild(script); } } }); } }); const finalAdQueue = []; const monetagAds = groupedAds['monetag'] ? [...groupedAds['monetag']] : []; const otherNetworkNames = Object.keys(groupedAds).filter(name => name !== 'monetag'); const otherAdsGrouped = {}; otherNetworkNames.forEach(name => { otherAdsGrouped[name] = groupedAds[name]; }); if (monetagAds.length > 0) { finalAdQueue.push(monetagAds.shift()); } const interleavedRest = []; const maxLength = Math.max(0, ...Object.values(otherAdsGrouped).map(arr => arr.length), monetagAds.length); for (let i = 0; i < maxLength; i++) { if(monetagAds[i]) interleavedRest.push(monetagAds[i]); for (const name of otherNetworkNames) { if (otherAdsGrouped[name][i]) { interleavedRest.push(otherAdsGrouped[name][i]); } } } finalAdQueue.push(...interleavedRest); return { ads: finalAdQueue }; }
         async function showMandatoryAdAfterAction(adQueue) { return new Promise(async (resolve, reject) => { if (!adQueue || adQueue.length === 0) { return resolve(); } const waitForSdk = (ad, timeout = 7000) => new Promise((resolveSdk, rejectSdk) => { const getRunner = () => { if (ad.type === 'monetag') return window[`show_${ad.zoneId}`]; if (ad.type === 'adexora') return window.showAdexora; if (ad.type === 'gigapub') return window.showGiga; return null; }; if (typeof getRunner() === 'function') return resolveSdk(getRunner()); const start = Date.now(); const interval = setInterval(() => { const runnerNow = getRunner(); if (typeof runnerNow === 'function') { clearInterval(interval); resolveSdk(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); rejectSdk(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); try { for (const ad of adQueue) { const adRunner = await waitForSdk(ad); const result = adRunner(); if (result && typeof result.then === 'function') { await result; } } resolve(); } catch (error) { console.error('Ad error:', error); reject(error); } }); }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if(window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.ready();
+                    const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
+                    if (startParam && startParam.startsWith('ref_')) {
+                        const refId = startParam.substring(4);
+                        sessionStorage.setItem('referralCode', refId);
+                        const referrerDoc = await db.collection('users').doc(refId).get();
+                        if (referrerDoc.exists) {
+                            const referrerName = referrerDoc.data().name;
+                            alert(`আপনি ${referrerName}-এর রেফারেলে যোগ দিচ্ছেন।`);
+                        } else {
+                            alert('আপনি একটি রেফারেল লিংক ব্যবহার করেছেন, কিন্তু রেফারকারীকে খুঁজে পাওয়া যায়নি।');
+                            sessionStorage.removeItem('referralCode');
+                        }
+                    }
+                }
+            } catch (e) { console.log("Could not process referral on load:", e); }
+            
             document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
             document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
-            document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); console.error("Password Reset Error:", error); } } });
+            document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); } } });
             document.getElementById('login-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value); } catch (err) { alert('লগ ইন ব্যর্থ: ' + err.message); }});
             document.getElementById('register-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, document.getElementById('register-password').value); await cred.user.updateProfile({ displayName: document.getElementById('register-name').value }); } catch (err) { alert('রেজিস্ট্রেশন ব্যর্থ: ' + err.message); }});
             
@@ -181,10 +211,10 @@
             
             document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { await showMandatoryAdAfterAction(adSettings); const rewardAmount = appSettings.watchAdReward || 0; if (rewardAmount > 0) { const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(rewardAmount), todayEarnings: inc(rewardAmount), totalEarnings: inc(rewardAmount), adsCompleted: inc(1) }); await addActivity('বিজ্ঞাপন দেখা', rewardAmount); alert(`ধন্যবাদ! ৳${rewardAmount.toFixed(2)} যোগ করা হয়েছে।`); } } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
             
-            document.getElementById('tasks-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const taskId = btn.dataset.id; const taskKey = `${taskId}_${new Date().toDateString()}`; if (btn.classList.contains('do-task-btn')) { const link = btn.dataset.link; if (link) window.open(link, '_blank'); addTaskToClaim(taskId); updateTasksList(); } if (btn.classList.contains('claim-task-btn')) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; try { await showMandatoryAdAfterAction(taskAdSettings); const reward = parseFloat(btn.dataset.reward); const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(reward), todayEarnings: inc(reward), totalEarnings: inc(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক পুরস্কার', reward); removeTaskFromClaim(taskId); alert(`অভিনন্দন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Task claim ad failed:", error); alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { updateTasksList(); } } });
+            document.getElementById('tasks-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const taskId = btn.dataset.id; if (btn.classList.contains('do-task-btn')) { const link = btn.dataset.link; if (link) window.open(link, '_blank'); addTaskToClaim(taskId); updateTasksList(); } if (btn.classList.contains('claim-task-btn')) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; try { await showMandatoryAdAfterAction(taskAdSettings); const reward = parseFloat(btn.dataset.reward); const taskKey = `${taskId}_${new Date().toDateString()}`; const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(reward), todayEarnings: inc(reward), totalEarnings: inc(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক পুরস্কার', reward); removeTaskFromClaim(taskId); alert(`অভিনন্দন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Task claim ad failed:", error); alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { updateTasksList(); } } });
             
             const spinButton = document.getElementById('spin-wheel-btn'), wheel = document.getElementById('wheel'); let isSpinning = false;
-            spinButton.addEventListener('click', async function() { if (isSpinning || spinPrizes.length === 0) return; const dailySpinLimit = appSettings.dailySpins || 3; if (userData.spinsUsed >= dailySpinLimit) { alert('আপনি আজকের সব স্পিন ব্যবহার করেছেন!'); return; } isSpinning = true; spinButton.disabled = true; const prizeIndex = Math.floor(Math.random() * spinPrizes.length); const prizeAmount = spinPrizes[prizeIndex]; const sectionAngle = 360 / spinPrizes.length; const randomSpins = Math.floor(Math.random() * 5) + 5; const targetAngle = (randomSpins * 360) + (360 - (prizeIndex * sectionAngle) - (sectionAngle / 2)); wheel.style.transition = 'transform 6s cubic-bezier(0.1, 0.7, 0.0, 1)'; wheel.style.transform = `rotate(${targetAngle}deg)`; setTimeout(async () => { alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে বিজ্ঞাপন দেখুন।`); let adWasSuccessful = false; try { await showMandatoryAdAfterAction(spinAdSettings); adWasSuccessful = true; const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(prizeAmount), todayEarnings: inc(prizeAmount), totalEarnings: inc(prizeAmount), spinsUsed: inc(1) }); await addActivity('স্পিন থেকে আয়', prizeAmount); alert(`সফল! আপনার অ্যাকাউন্টে ৳${prizeAmount.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Spin ad failed:", error); alert('দুঃখিত, বিজ্ঞাপনটি দেখানো যায়নি। পুরস্কার যোগ করা সম্ভব হয়নি। আপনার স্পিনটি নষ্ট হবে না, আবার চেষ্টা করুন।'); } finally { wheel.style.transition = 'none'; wheel.style.transform = `rotate(${targetAngle % 360}deg)`; isSpinning = false; const spinsAfterAttempt = userData.spinsUsed + (adWasSuccessful ? 1 : 0); spinButton.disabled = spinsAfterAttempt >= dailySpinLimit; if (adWasSuccessful && spinsAfterAttempt >= dailySpinLimit) { alert('আপনার আজকের স্পিন শেষ।'); } } }, 6000); });
+            spinButton.addEventListener('click', async function() { if (isSpinning || spinPrizes.length === 0) return; const dailySpinLimit = appSettings.dailySpins || 3; if (userData.spinsUsed >= dailySpinLimit) { alert('আপনি আজকের সব স্পিন ব্যবহার করেছেন!'); return; } isSpinning = true; spinButton.disabled = true; const prizeIndex = Math.floor(Math.random() * spinPrizes.length); const prizeAmount = spinPrizes[prizeIndex]; const sectionAngle = 360 / spinPrizes.length; const randomSpins = Math.floor(Math.random() * 5) + 5; const targetAngle = (randomSpins * 360) + (360 - (prizeIndex * sectionAngle) - (sectionAngle / 2)); wheel.style.transition = 'transform 6s cubic-bezier(0.1, 0.7, 0.0, 1)'; wheel.style.transform = `rotate(${targetAngle}deg)`; setTimeout(async () => { alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে বিজ্ঞাপন দেখুন।`); let adWasSuccessful = false; try { await showMandatoryAdAfterAction(spinAdSettings); adWasSuccessful = true; const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(prizeAmount), todayEarnings: inc(prizeAmount), totalEarnings: inc(prizeAmount), spinsUsed: inc(1) }); await addActivity('স্পিন থেকে আয়', prizeAmount); alert(`সফল! আপনার অ্যাকাউন্টে ৳${prizeAmount.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Spin ad failed:", error); alert('দুঃখিত, বিজ্ঞাপনটি দেখানো যায়নি। পুরস্কার যোগ করা সম্ভব হয়নি।'); } finally { wheel.style.transition = 'none'; wheel.style.transform = `rotate(${targetAngle % 360}deg)`; isSpinning = false; const spinsAfterAttempt = userData.spinsUsed + (adWasSuccessful ? 1 : 0); spinButton.disabled = spinsAfterAttempt >= dailySpinLimit; if (adWasSuccessful && spinsAfterAttempt >= dailySpinLimit) { alert('আপনার আজকের স্পিন শেষ।'); } } }, 6000); });
 
             const withdrawModal = document.getElementById('withdraw-modal'); const showWithdrawModal = () => { document.getElementById('withdraw-amount').value = userData.balance.toFixed(2); withdrawModal.style.display = 'flex'; };
             document.getElementById('withdraw-btn-home').addEventListener('click', showWithdrawModal);
@@ -206,18 +236,27 @@
                 currentUser = user;
                 await loadAppSettings();
                 userData = await initializeUserData(user);
-                if (userData.isBanned) { alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।'); auth.signOut(); return; }
+                
+                if (userData.isBanned) { 
+                    alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।'); 
+                    auth.signOut(); 
+                    return; 
+                }
+                
                 showMainApp();
+                
                 const adCollections = ['ad_networks', 'spin_ads', 'task_ads'];
                 const [watchAdResult, spinAdResult, taskAdResult] = await Promise.all(adCollections.map(c => loadAdScriptsAndSettings(c)));
                 adSettings = watchAdResult.ads;
                 spinAdSettings = spinAdResult.ads;
                 taskAdSettings = taskAdResult.ads;
                 await Promise.all(adCollections.map(c => initializeAdNetworks(c)));
+                
                 listenToUserData(user.uid);
             } else {
                 currentUser = null; userData = null; if (userListener) userListener();
                 sessionStorage.removeItem('tasksToClaim');
+                sessionStorage.removeItem('referralCode');
                 showAuthSection();
             }
         });
