@@ -132,7 +132,7 @@
                         ref = startParam.substring(4);
                     }
                 }
-            } catch (e) { console.error("Telegram WebApp API not available or failed:", e); }
+            } catch (e) { console.error("Telegram WebApp API error:", e); }
             
             const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false };
             await userRef.set(newUserData);
