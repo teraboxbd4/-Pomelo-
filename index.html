@@ -180,23 +180,26 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                if(window.Telegram && Telegram.WebApp) {
+                if(window.Telegram && Telegram.WebApp && !sessionStorage.getItem('referralCodeChecked')) {
                     Telegram.WebApp.ready();
                     const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
                     if (startParam && startParam.startsWith('ref_')) {
                         const refId = startParam.substring(4);
-                        sessionStorage.setItem('referralCode', refId);
                         const referrerDoc = await db.collection('users').doc(refId).get();
-                        if (referrerDoc.exists) {
+                        if (referrerDoc.exists()) {
+                            sessionStorage.setItem('referralCode', refId);
                             const referrerName = referrerDoc.data().name;
                             alert(`আপনি ${referrerName}-এর রেফারেলে যোগ দিচ্ছেন।`);
                         } else {
-                            alert('আপনি একটি রেফারেল লিংক ব্যবহার করেছেন, কিন্তু রেফারকারীকে খুঁজে পাওয়া যায়নি।');
-                            sessionStorage.removeItem('referralCode');
+                             alert('আপনি একটি রেফারেল লিংক ব্যবহার করেছেন, কিন্তু রেফারকারীকে খুঁজে পাওয়া যায়নি।');
                         }
                     }
+                    sessionStorage.setItem('referralCodeChecked', 'true');
                 }
-            } catch (e) { console.log("Could not process referral on load:", e); }
+            } catch (e) {
+                console.log("Could not process referral on load:", e);
+                sessionStorage.setItem('referralCodeChecked', 'true');
+            }
             
             document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
             document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
@@ -256,7 +259,7 @@
             } else {
                 currentUser = null; userData = null; if (userListener) userListener();
                 sessionStorage.removeItem('tasksToClaim');
-                sessionStorage.removeItem('referralCode');
+                // Do not remove 'referralCode' on logout. It's cleaned up after registration.
                 showAuthSection();
             }
         });
