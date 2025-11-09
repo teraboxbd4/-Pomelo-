@@ -190,7 +190,7 @@
                 showMainApp();
                 const watchAdResult = await loadAdScriptsAndSettings('ad_networks');
                 adSettings = watchAdResult.ads;
-                document.getElementById('watch-ad-reward').textContent = `৳${(watchAdResult.totalReward || 5).toFixed(2)} আয় করুন`;
+                // The text for "watch-ad-reward" is now hard-coded in HTML, so no JS update is needed here.
                 document.getElementById('watch-ad-btn').disabled = watchAdResult.totalReward === 0;
                 const spinAdResult = await loadAdScriptsAndSettings('spin_ads');
                 spinAdSettings = spinAdResult.ads;
