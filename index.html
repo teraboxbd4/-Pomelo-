@@ -157,7 +157,7 @@
         async function loadAppSettings() {
             const doc = await db.collection('app_settings').doc('config').get();
             const defaults = {
-                minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে।'
+                minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে।'
             };
             appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults;
             spinPrizes = appSettings.spinPrizes;
@@ -177,7 +177,6 @@
         
         const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
         
-        // ### "হিস্টোরি লোড করা যায়নি" সমস্যার সমাধান ###
         async function loadWithdrawalHistory() {
             const historyContainer = document.getElementById('withdrawal-history');
             if (!currentUser) { historyContainer.innerHTML = ''; return; }
@@ -188,11 +187,8 @@
                     historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>';
                     return;
                 }
-                
-                // তথ্য ক্লায়েন্ট-সাইডে সর্ট করা হচ্ছে
                 const withdrawals = snapshot.docs.map(doc => doc.data());
                 withdrawals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
                 historyContainer.innerHTML = '';
                 withdrawals.forEach(withdrawal => {
                     let statusClass = '', statusText = '';
@@ -228,7 +224,18 @@
             document.getElementById('user-name').textContent = userData.name;
             document.getElementById('profile-name').textContent = userData.name;
             document.getElementById('join-date').textContent = new Date(userData.joinDate).toLocaleDateString('bn-BD');
-            document.getElementById('referral-link').value = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`;
+            
+            // ### রেফারেল লিংক সমস্যার সমাধান ###
+            let referralLink = '';
+            if (appSettings.botUsername) {
+                // টেলিগ্রাম বটের লিংক তৈরি হবে যদি এডমিন প্যানেলে ইউজারনেম সেট করা থাকে
+                referralLink = `https://t.me/${appSettings.botUsername}?start=${currentUser.uid}`;
+            } else {
+                // ফলব্যাক হিসেবে আগের ওয়েব ইউআরএল দেখানো হবে
+                referralLink = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`;
+            }
+            document.getElementById('referral-link').value = referralLink;
+
             document.getElementById('profile-tasks').textContent = (userData.tasksCompleted || []).filter(key => key.endsWith(new Date().toDateString())).length;
             document.getElementById('profile-referrals').textContent = userData.referrals || 0;
             document.getElementById('min-withdrawal-text').textContent = (appSettings.minWithdrawal || 50).toFixed(2);
@@ -277,7 +284,6 @@
 
         async function updateTasksList() { const list = document.getElementById('tasks-list'); list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>'; try { const snapshot = await db.collection('tasks').where('status', '==', 'active').get(); if (snapshot.empty) { list.innerHTML = '<p>আজকের জন্য কোনো টাস্ক নেই।</p>'; return; } const tasksToClaim = getTasksToClaim(); list.innerHTML = ''; snapshot.forEach(doc => { const task = doc.data(); const taskId = doc.id; const taskKey = `${taskId}_${new Date().toDateString()}`; const isCompleted = (userData.tasksCompleted || []).includes(taskKey); const isReadyToClaim = tasksToClaim.includes(taskId); let buttonHTML = ''; if (isCompleted) { buttonHTML = `<button class="w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-gray-400" disabled>সম্পন্ন</button>`; } else if (isReadyToClaim) { buttonHTML = `<button class="claim-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-green-500 hover:bg-green-600" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`; } else { buttonHTML = `<button class="do-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 hover:bg-cyan-600" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`; } const imageOrIconHTML = task.imageUrl ? `<img src="${task.imageUrl}" class="w-12 h-12 rounded-lg object-cover mr-4 flex-shrink-0">` : `<i class="${task.icon || 'fas fa-tasks'} text-cyan-500 text-3xl mr-4 w-12 text-center flex-shrink-0"></i>`; list.innerHTML += `<div class="flex items-center justify-between p-4 bg-white/30 rounded-lg"><div class="flex items-center flex-grow">${imageOrIconHTML}<div><p class="font-semibold">${task.name}</p><p class="text-sm text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p></div></div><div class="flex-shrink-0 ml-2">${buttonHTML}</div></div>`; }); } catch(e){ list.innerHTML = '<p class="text-red-500">টাস্ক লোড করা যায়নি।</p>'; } }
         
-        // ### "কার্যক্রম লোড করা যায়নি" সমস্যার সমাধান ###
         async function updateRecentActivities() {
             const container = document.getElementById('recent-activity');
             if (!currentUser) { container.innerHTML = ''; return; }
@@ -288,11 +294,8 @@
                     container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>';
                     return;
                 }
-                
-                // তথ্য ক্লায়েন্ট-সাইডে সর্ট করা হচ্ছে
                 const activities = snapshot.docs.map(doc => doc.data());
                 activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
                 container.innerHTML = '';
                 activities.forEach(act => {
                     container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`;
