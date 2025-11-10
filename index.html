@@ -86,6 +86,15 @@
                 <div class="glass-card p-6">
                     <h2 class="text-2xl font-bold mb-6"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2>
                     <div id="wallet-notice" class="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div>
+                    
+                    <!-- ### পরিবর্তন ১: "উত্তোলনের শর্তাবলী" সেকশনটি এখানে স্থানান্তর করা হয়েছে ### -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3>
+                        <div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg">
+                            <!-- শর্তগুলো এখানে জাভাস্ক্রিপ্ট থেকে আসবে -->
+                        </div>
+                    </div>
+
                     <div class="mb-6 p-4 bg-cyan-100 rounded-xl text-gray-800">
                         <p>মোট ব্যালেন্স</p>
                         <p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p>
@@ -102,20 +111,6 @@
                         </div>
                     </div>
                     <button id="wallet-withdraw-btn" class="btn-primary w-full py-3"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button>
-                    
-                    <div class="mt-8">
-                        <h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3>
-                        <div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg">
-                            <!-- শর্তগুলো এখানে জাভাস্ক্রিপ্ট থেকে আসবে -->
-                        </div>
-                    </div>
-
-                    <div class="mt-8">
-                        <h3 class="text-xl font-bold mb-4">লেনদেনের বিবরণী</h3>
-                        <div id="transaction-history" class="space-y-3">
-                            <!-- লেনদেনের বিবরণী এখানে জাভাস্ক্রিপ্ট থেকে আসবে -->
-                        </div>
-                    </div>
 
                     <div class="mt-8">
                         <h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3>
@@ -168,19 +163,7 @@
         async function loadAppSettings() {
             const doc = await db.collection('app_settings').doc('config').get();
             const defaults = {
-                minWithdrawal: 50,
-                referralBonus: 5,
-                dailySpins: 3,
-                watchAdReward: 5,
-                spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1],
-                watchAdNotice: '৳5.00 আয় করুন',
-                doTaskNotice: 'আয় করুন',
-                spinWheelNotice: 'পুরস্কার জিতুন',
-                referralNotice: '৳5.00 বোনাস পান',
-                supportLinks: [],
-                minReferrals: 10,
-                minBalance: 1000,
-                walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে।'
+                minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে।'
             };
             appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults;
             spinPrizes = appSettings.spinPrizes;
@@ -200,54 +183,42 @@
         
         const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
         
-        async function loadTransactionHistory() {
-            const historyContainer = document.getElementById('transaction-history');
-            historyContainer.innerHTML = '<p>লোড হচ্ছে...</p>';
-            const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(10).get();
-            if (snapshot.empty) {
-                historyContainer.innerHTML = '<p class="text-center">আপনার কোনো লেনদেনের রেকর্ড নেই।</p>';
-                return;
-            }
-            historyContainer.innerHTML = '';
-            snapshot.forEach(doc => {
-                const activity = doc.data();
-                historyContainer.innerHTML += `
-                    <div class="p-3 bg-white/70 rounded-lg flex justify-between items-center">
-                        <div>
-                            <p class="font-semibold">${activity.title}</p>
-                            <p class="text-sm text-gray-600">${new Date(activity.timestamp).toLocaleString('bn-BD')}</p>
-                        </div>
-                        <p class="text-green-600 font-bold">+৳${activity.amount.toFixed(2)}</p>
-                    </div>`;
-            });
-        }
-        
+        // ### পরিবর্তন ২: "উত্তোলনের হিস্টোরি" লোডিং ফাংশন সংশোধন ###
         async function loadWithdrawalHistory() {
             const historyContainer = document.getElementById('withdrawal-history');
-            historyContainer.innerHTML = '<p>হিস্টোরি লোড হচ্ছে...</p>';
-            const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(10).get();
-            if (snapshot.empty) {
-                historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>';
+            if (!currentUser) { // ব্যবহারকারী লগইন না থাকলে ফাংশন চলবে না
+                historyContainer.innerHTML = '<p class="text-center">হিস্টোরি দেখতে লগইন করুন।</p>';
                 return;
             }
-            historyContainer.innerHTML = '';
-            snapshot.forEach(doc => {
-                const withdrawal = doc.data();
-                let statusClass = '', statusText = '';
-                switch (withdrawal.status) {
-                    case 'approved': statusClass = 'text-green-600 bg-green-100'; statusText = 'অনুমোদিত'; break;
-                    case 'rejected': statusClass = 'text-red-600 bg-red-100'; statusText = 'প্রত্যাখ্যাত'; break;
-                    default: statusClass = 'text-yellow-600 bg-yellow-100'; statusText = 'পেন্ডিং';
+            historyContainer.innerHTML = '<p>হিস্টোরি লোড হচ্ছে...</p>';
+            try {
+                const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(10).get();
+                if (snapshot.empty) {
+                    historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>';
+                    return;
                 }
-                historyContainer.innerHTML += `
-                    <div class="p-3 bg-white/70 rounded-lg flex justify-between items-center">
-                        <div>
-                            <p class="font-bold">৳${withdrawal.amount.toFixed(2)} - ${withdrawal.method}</p>
-                            <p class="text-sm text-gray-600">${new Date(withdrawal.timestamp).toLocaleDateString('bn-BD')}</p>
-                        </div>
-                        <span class="px-3 py-1 text-sm font-semibold rounded-full ${statusClass}">${statusText}</span>
-                    </div>`;
-            });
+                historyContainer.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const withdrawal = doc.data();
+                    let statusClass = '', statusText = '';
+                    switch (withdrawal.status) {
+                        case 'approved': statusClass = 'text-green-600 bg-green-100'; statusText = 'অনুমোদিত'; break;
+                        case 'rejected': statusClass = 'text-red-600 bg-red-100'; statusText = 'প্রত্যাখ্যাত'; break;
+                        default: statusClass = 'text-yellow-600 bg-yellow-100'; statusText = 'পেন্ডিং';
+                    }
+                    historyContainer.innerHTML += `
+                        <div class="p-3 bg-white/70 rounded-lg flex justify-between items-center">
+                            <div>
+                                <p class="font-bold">৳${withdrawal.amount.toFixed(2)} - ${withdrawal.method}</p>
+                                <p class="text-sm text-gray-600">${new Date(withdrawal.timestamp).toLocaleDateString('bn-BD')}</p>
+                            </div>
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full ${statusClass}">${statusText}</span>
+                        </div>`;
+                });
+            } catch (error) {
+                console.error("Error loading withdrawal history:", error);
+                historyContainer.innerHTML = '<p class="text-center text-red-500">হিস্টোরি লোড করা যায়নি।</p>';
+            }
         }
         
         async function addActivity(title, amount) { if (amount > 0) { await db.collection('activities').add({ userId: currentUser.uid, title, amount, timestamp: new Date().toISOString() }); } }
@@ -302,7 +273,6 @@
             
             updateTasksList();
             updateRecentActivities();
-            loadTransactionHistory();
             loadWithdrawalHistory();
         }
         
@@ -312,7 +282,30 @@
 
         async function updateTasksList() { const list = document.getElementById('tasks-list'); list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>'; const snapshot = await db.collection('tasks').where('status', '==', 'active').get(); if (snapshot.empty) { list.innerHTML = '<p>আজকের জন্য কোনো টাস্ক নেই।</p>'; return; } const tasksToClaim = getTasksToClaim(); list.innerHTML = ''; snapshot.forEach(doc => { const task = doc.data(); const taskId = doc.id; const taskKey = `${taskId}_${new Date().toDateString()}`; const isCompleted = (userData.tasksCompleted || []).includes(taskKey); const isReadyToClaim = tasksToClaim.includes(taskId); let buttonHTML = ''; if (isCompleted) { buttonHTML = `<button class="w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-gray-400" disabled>সম্পন্ন</button>`; } else if (isReadyToClaim) { buttonHTML = `<button class="claim-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-green-500 hover:bg-green-600" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`; } else { buttonHTML = `<button class="do-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 hover:bg-cyan-600" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`; } const imageOrIconHTML = task.imageUrl ? `<img src="${task.imageUrl}" class="w-12 h-12 rounded-lg object-cover mr-4 flex-shrink-0">` : `<i class="${task.icon || 'fas fa-tasks'} text-cyan-500 text-3xl mr-4 w-12 text-center flex-shrink-0"></i>`; list.innerHTML += `<div class="flex items-center justify-between p-4 bg-white/30 rounded-lg"><div class="flex items-center flex-grow">${imageOrIconHTML}<div><p class="font-semibold">${task.name}</p><p class="text-sm text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p></div></div><div class="flex-shrink-0 ml-2">${buttonHTML}</div></div>`; }); }
         
-        async function updateRecentActivities() { const container = document.getElementById('recent-activity'); container.innerHTML = '<p>লোড হচ্ছে...</p>'; const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(5).get(); if(snapshot.empty) { container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>'; return; } container.innerHTML = ''; snapshot.forEach(doc => { const act = doc.data(); container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`; }); }
+        // ### পরিবর্তন ৩: "সাম্প্রতিক কার্যক্রম" লোডিং ফাংশন সংশোধন ###
+        async function updateRecentActivities() {
+            const container = document.getElementById('recent-activity');
+            if (!currentUser) { // ব্যবহারকারী লগইন না থাকলে ফাংশন চলবে না
+                container.innerHTML = '<p class="text-center">কার্যক্রম দেখতে লগইন করুন।</p>';
+                return;
+            }
+            container.innerHTML = '<p>লোড হচ্ছে...</p>';
+            try {
+                const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(5).get();
+                if(snapshot.empty) {
+                    container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>';
+                    return;
+                }
+                container.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const act = doc.data();
+                    container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`;
+                });
+            } catch (error) {
+                console.error("Error loading recent activities:", error);
+                container.innerHTML = '<p class="text-center text-red-500">কার্যক্রম লোড করা যায়নি।</p>';
+            }
+        }
         
         async function initializeAdNetworks(collectionName) { const ref = db.collection(collectionName); const snap = await ref.limit(1).get(); if (snap.empty) { const batch = db.batch(); batch.set(ref.doc('monetag'), { name: 'Monetag', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('gigapub'), { name: 'Gigapub', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('adexora'), { name: 'Adexora', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); await batch.commit(); } }
         async function loadAdScriptsAndSettings(collectionName) { const networksSnapshot = await db.collection(collectionName).get(); const groupedAds = {}; networksSnapshot.forEach(doc => { const network = doc.data(); if (network.isActive && network.zones) { groupedAds[doc.id] = []; network.zones.forEach(zone => { if (zone.isActive && zone.id && zone.id.toUpperCase() !== 'YOUR_ID' && zone.id.toUpperCase() !== 'NEW_ZONE_ID') { const adData = { type: doc.id, zoneId: zone.id }; groupedAds[doc.id].push(adData); const scriptId = `ad-sdk-${doc.id}-${zone.id}`; if (!document.getElementById(scriptId)) { const script = document.createElement('script'); script.id = scriptId; if (doc.id === 'monetag') { script.src = `//libtl.com/sdk.js`; script.setAttribute('data-zone', zone.id); script.setAttribute('data-sdk', `show_${zone.id}`); } else if (doc.id === 'gigapub') { script.src = `https://ad.gigapub.tech/script?id=${zone.id}`; } else if (doc.id === 'adexora') { script.src = `https://adexora.com/cdn/ads.js?id=${zone.id}`; } document.head.appendChild(script); } } }); } }); const finalAdQueue = []; const monetagAds = groupedAds['monetag'] ? [...groupedAds['monetag']] : []; const otherNetworkNames = Object.keys(groupedAds).filter(name => name !== 'monetag'); const otherAdsGrouped = {}; otherNetworkNames.forEach(name => { otherAdsGrouped[name] = groupedAds[name]; }); if (monetagAds.length > 0) { finalAdQueue.push(monetagAds.shift()); } const interleavedRest = []; const maxLength = Math.max(0, ...Object.values(otherAdsGrouped).map(arr => arr.length), monetagAds.length); for (let i = 0; i < maxLength; i++) { if(monetagAds[i]) interleavedRest.push(monetagAds[i]); for (const name of otherNetworkNames) { if (otherAdsGrouped[name][i]) { interleavedRest.push(otherAdsGrouped[name][i]); } } } finalAdQueue.push(...interleavedRest); return { ads: finalAdQueue }; }
@@ -413,7 +406,7 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
-                await loadAppSettings(); // Load settings first to use referral bonus value
+                await loadAppSettings();
                 userData = await initializeUserData(user);
                 if (userData.isBanned) { alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।'); auth.signOut(); return; }
                 showMainApp();
