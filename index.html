@@ -225,13 +225,13 @@
             document.getElementById('profile-name').textContent = userData.name;
             document.getElementById('join-date').textContent = new Date(userData.joinDate).toLocaleDateString('bn-BD');
             
-            // ### রেফারেল লিংক সমস্যার সমাধান ###
+            // ### সঠিক রেফারেল লিংক তৈরির কোড ###
             let referralLink = '';
-            if (appSettings.botUsername) {
-                // টেলিগ্রাম বটের লিংক তৈরি হবে যদি এডমিন প্যানেলে ইউজারনেম সেট করা থাকে
-                referralLink = `https://t.me/${appSettings.botUsername}?start=${currentUser.uid}`;
+            // অ্যাডমিন প্যানেলে botUsername এবং appShortName সেট করা আছে কি না, তা পরীক্ষা করা হচ্ছে
+            if (appSettings.botUsername && appSettings.appShortName) {
+                referralLink = `https://t.me/${appSettings.botUsername}/${appSettings.appShortName}?startapp=${currentUser.uid}`;
             } else {
-                // ফলব্যাক হিসেবে আগের ওয়েব ইউআরএল দেখানো হবে
+                // যদি সেট করা না থাকে, তবে আগের মতো ওয়েব লিংক দেখানো হবে
                 referralLink = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`;
             }
             document.getElementById('referral-link').value = referralLink;
