@@ -58,14 +58,17 @@
                 <p class="text-center">অ্যাকাউন্ট নেই? <a href="#" id="show-register" class="text-cyan-600 hover:underline">রেজিস্টার করুন</a></p>
             </div>
             <div id="register-form" class="hidden">
-                <h2 class="text-2xl font-bold mb-6 text-center">রেজিস্টার করুন</h2>
-                <form id="register-form-element">
-                    <div class="mb-4"><label class="block mb-2">পুরো নাম</label><input type="text" id="register-name" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">ইমেইল</label><input type="email" id="register-email" class="w-full p-3" required></div>
-                    <div class="mb-6"><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="register-password" class="w-full p-3" required></div>
-                    <button type="submit" class="btn-primary w-full py-3 mb-4">রেজিস্টার</button>
+                <h2 class="text-2xl font-bold mb-6 text-center">নতুন অ্যাকাউন্ট তৈরি করুন</h2>
+                <form id="register-form-element" class="space-y-4">
+                    <div><label class="block mb-2">পুরো নাম</label><input type="text" id="register-name" class="w-full p-3" required></div>
+                    <div><label class="block mb-2">ইমেইল</label><input type="email" id="register-email" class="w-full p-3" required></div>
+                    <div><label class="block mb-2">ফোন নম্বর</label><input type="tel" id="register-phone" class="w-full p-3" required></div>
+                    <div><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="register-password" class="w-full p-3" required></div>
+                    <div><label class="block mb-2">কনফার্ম পাসওয়ার্ড</label><input type="password" id="register-confirm-password" class="w-full p-3" required></div>
+                    <div id="referral-code-wrapper" class="hidden"><label class="block mb-2">রেফারেল কোড</label><input type="text" id="register-referral-code" class="w-full p-3 opacity-70" readonly></div>
+                    <button type="submit" class="btn-primary w-full py-3 !mt-6">রেজিস্টার</button>
                 </form>
-                <p class="text-center">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="#" id="show-login" class="text-cyan-600 hover:underline">লগ ইন করুন</a></p>
+                <p class="text-center mt-4">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="#" id="show-login" class="text-cyan-600 hover:underline">লগ ইন করুন</a></p>
             </div>
         </div>
     </div>
@@ -101,7 +104,6 @@
         </div>
     </div>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBowdaBVkAZa7OLr0wmJxjn9JqSlsy7l5o", authDomain: "pomelo-50690.firebaseapp.com", projectId: "pomelo-50690", storageBucket: "pomelo-50690.firebasestorage.app", messagingSenderId: "687340787607", appId: "1:687340787607:web:5c2fe2d6d0ff09c6c956d2" };
         firebase.initializeApp(firebaseConfig);
@@ -112,7 +114,18 @@
 
         const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').classList.add('hidden'); };
         const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').classList.remove('hidden'); };
-        const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
+        const switchToRegister = () => {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+            const refCode = sessionStorage.getItem('referralCode');
+            const refWrapper = document.getElementById('referral-code-wrapper');
+            if (refCode) {
+                document.getElementById('register-referral-code').value = refCode;
+                refWrapper.classList.remove('hidden');
+            } else {
+                refWrapper.classList.add('hidden');
+            }
+        };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
         async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
@@ -125,37 +138,22 @@
             if (userDoc.exists) return userDoc.data();
 
             const ref = sessionStorage.getItem('referralCode') || null;
+            const phone = sessionStorage.getItem('registrationPhone') || '';
 
-            const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref, isBanned: false };
+            const newUserData = { uid: user.uid, email: user.email, name: user.displayName, phone: phone, balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref, isBanned: false };
             await userRef.set(newUserData);
 
             if (ref && appSettings.referralBonus > 0) {
                 const referrerRef = db.collection('users').doc(ref);
                 const referralBonus = appSettings.referralBonus;
                 try {
-                    let bonusGiven = false;
-                    await db.runTransaction(async (t) => { 
-                        const doc = await t.get(referrerRef); 
-                        if (doc.exists && !doc.data().isBanned) { 
-                            t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) });
-                            bonusGiven = true;
-                        } 
-                    });
-                    if (bonusGiven) {
-                        await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
-                        alert(`রেজিস্ট্রেশন সফল হয়েছে! রেফারেলের জন্য বোনাস দেওয়া হয়েছে।`);
-                    } else {
-                         alert(`রেজিস্ট্রেশন সফল হয়েছে, কিন্তু রেফারেল কোডটি সঠিক না হওয়ায় বোনাস দেওয়া সম্ভব হয়নি।`);
-                    }
-                } catch (error) { 
-                    console.error("Error giving referral bonus:", error);
-                    alert('রেজিস্ট্রেশন সফল হয়েছে, কিন্তু বোনাস দেওয়ার সময় একটি সমস্যা হয়েছে।');
-                }
-            } else {
-                alert('রেজিস্ট্রেশন সফল হয়েছে!');
+                    await db.runTransaction(async (t) => { const doc = await t.get(referrerRef); if (doc.exists && !doc.data().isBanned) { t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) }); } });
+                    await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
+                } catch (error) { console.error("Error giving referral bonus:", error); }
             }
             
             sessionStorage.removeItem('referralCode');
+            sessionStorage.removeItem('registrationPhone');
             return newUserData;
         }
         
@@ -178,34 +176,23 @@
         async function loadAdScriptsAndSettings(collectionName) { const networksSnapshot = await db.collection(collectionName).get(); const groupedAds = {}; networksSnapshot.forEach(doc => { const network = doc.data(); if (network.isActive && network.zones) { groupedAds[doc.id] = []; network.zones.forEach(zone => { if (zone.isActive && zone.id && zone.id.toUpperCase() !== 'YOUR_ID' && zone.id.toUpperCase() !== 'NEW_ZONE_ID') { const adData = { type: doc.id, zoneId: zone.id }; groupedAds[doc.id].push(adData); const scriptId = `ad-sdk-${doc.id}-${zone.id}`; if (!document.getElementById(scriptId)) { const script = document.createElement('script'); script.id = scriptId; if (doc.id === 'monetag') { script.src = `//libtl.com/sdk.js`; script.setAttribute('data-zone', zone.id); script.setAttribute('data-sdk', `show_${zone.id}`); } else if (doc.id === 'gigapub') { script.src = `https://ad.gigapub.tech/script?id=${zone.id}`; } else if (doc.id === 'adexora') { script.src = `https://adexora.com/cdn/ads.js?id=${zone.id}`; } document.head.appendChild(script); } } }); } }); const finalAdQueue = []; const monetagAds = groupedAds['monetag'] ? [...groupedAds['monetag']] : []; const otherNetworkNames = Object.keys(groupedAds).filter(name => name !== 'monetag'); const otherAdsGrouped = {}; otherNetworkNames.forEach(name => { otherAdsGrouped[name] = groupedAds[name]; }); if (monetagAds.length > 0) { finalAdQueue.push(monetagAds.shift()); } const interleavedRest = []; const maxLength = Math.max(0, ...Object.values(otherAdsGrouped).map(arr => arr.length), monetagAds.length); for (let i = 0; i < maxLength; i++) { if(monetagAds[i]) interleavedRest.push(monetagAds[i]); for (const name of otherNetworkNames) { if (otherAdsGrouped[name][i]) { interleavedRest.push(otherAdsGrouped[name][i]); } } } finalAdQueue.push(...interleavedRest); return { ads: finalAdQueue }; }
         async function showMandatoryAdAfterAction(adQueue) { return new Promise(async (resolve, reject) => { if (!adQueue || adQueue.length === 0) { return resolve(); } const waitForSdk = (ad, timeout = 7000) => new Promise((resolveSdk, rejectSdk) => { const getRunner = () => { if (ad.type === 'monetag') return window[`show_${ad.zoneId}`]; if (ad.type === 'adexora') return window.showAdexora; if (ad.type === 'gigapub') return window.showGiga; return null; }; if (typeof getRunner() === 'function') return resolveSdk(getRunner()); const start = Date.now(); const interval = setInterval(() => { const runnerNow = getRunner(); if (typeof runnerNow === 'function') { clearInterval(interval); resolveSdk(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); rejectSdk(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); try { for (const ad of adQueue) { const adRunner = await waitForSdk(ad); const result = adRunner(); if (result && typeof result.then === 'function') { await result; } } resolve(); } catch (error) { console.error('Ad error:', error); reject(error); } }); }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                if(window.Telegram && Telegram.WebApp && !sessionStorage.getItem('referralCodeChecked')) {
+                if (window.Telegram && Telegram.WebApp && !sessionStorage.getItem('referralCodeChecked')) {
                     Telegram.WebApp.ready();
                     const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
                     if (startParam && startParam.startsWith('ref_')) {
-                        const refId = startParam.substring(4);
-                        const referrerDoc = await db.collection('users').doc(refId).get();
-                        if (referrerDoc.exists()) {
-                            sessionStorage.setItem('referralCode', refId);
-                            const referrerName = referrerDoc.data().name;
-                            alert(`আপনি ${referrerName}-এর রেফারেলে যোগ দিচ্ছেন।`);
-                        } else {
-                             alert('আপনি একটি রেফারেল লিংক ব্যবহার করেছেন, কিন্তু রেফারকারীকে খুঁজে পাওয়া যায়নি।');
-                        }
+                        sessionStorage.setItem('referralCode', startParam.substring(4));
                     }
                     sessionStorage.setItem('referralCodeChecked', 'true');
                 }
-            } catch (e) {
-                console.log("Could not process referral on load:", e);
-                sessionStorage.setItem('referralCodeChecked', 'true');
-            }
+            } catch (e) { console.log("Could not process referral on load:", e); sessionStorage.setItem('referralCodeChecked', 'true'); }
             
             document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
             document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
             document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); } } });
             document.getElementById('login-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value); } catch (err) { alert('লগ ইন ব্যর্থ: ' + err.message); }});
-            document.getElementById('register-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, document.getElementById('register-password').value); await cred.user.updateProfile({ displayName: document.getElementById('register-name').value }); } catch (err) { alert('রেজিস্ট্রেশন ব্যর্থ: ' + err.message); }});
+            document.getElementById('register-form-element').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('register-name').value; const email = document.getElementById('register-email').value; const phone = document.getElementById('register-phone').value; const password = document.getElementById('register-password').value; const confirmPassword = document.getElementById('register-confirm-password').value; if (password !== confirmPassword) { alert('পাসওয়ার্ড এবং কনফার্ম পাসওয়ার্ড মিলছে না।'); return; } try { sessionStorage.setItem('registrationPhone', phone); const cred = await auth.createUserWithEmailAndPassword(email, password); await cred.user.updateProfile({ displayName: name }); } catch (err) { alert('রেজিস্ট্রেশন ব্যর্থ: ' + err.message); sessionStorage.removeItem('registrationPhone'); } });
             
             const sections = document.querySelectorAll('.content-section'), navItems = document.querySelectorAll('.nav-item'), navButtons = document.querySelectorAll('.nav-btn');
             function navigateTo(sectionId) { sections.forEach(s => s.classList.remove('active')); document.getElementById(sectionId)?.classList.add('active'); navItems.forEach(n => n.classList.toggle('active', n.dataset.section === sectionId)); }
@@ -259,7 +246,6 @@
             } else {
                 currentUser = null; userData = null; if (userListener) userListener();
                 sessionStorage.removeItem('tasksToClaim');
-                // Do not remove 'referralCode' on logout. It's cleaned up after registration.
                 showAuthSection();
             }
         });
