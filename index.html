@@ -93,7 +93,7 @@
                 <div class="glass-card p-6"><div class="mb-6"><h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3><div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div></div><h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2><div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div><div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div><div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div><button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button><div><h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3><div id="withdrawal-history" class="space-y-3"></div></div></div>
             </section>
             <section id="profile" class="content-section">
-                <div class="p-4 rounded-2xl" style="background-color: #fdd835;">
+                <div class="glass-card p-4">
                     <div class="flex items-center space-x-4">
                         <div class="profile-pic-container">
                             <img id="profile-pic-img" src="https://i.ibb.co/6y4n3SM/default-avatar.png" alt="Profile Picture" class="profile-pic">
@@ -107,12 +107,9 @@
                                 <input type="text" id="profile-name-input" class="w-full text-xl font-bold p-1 border rounded-md">
                                 <button id="save-name-btn" class="btn-primary py-1 px-3 mt-1 text-sm">সেভ করুন</button>
                             </div>
-                            <div class="text-sm mt-1 inline-block bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-                                <span id="profile-email-display"></span>
-                                <i id="copy-email-btn" class="far fa-copy cursor-pointer ml-2" title="ইমেইল কপি করুন"></i>
-                            </div>
-                             <p id="profile-phone-display" class="text-sm text-gray-700 mt-2 font-medium"></p>
-                             <p id="profile-join-date" class="text-xs text-gray-600 mt-1"></p>
+                            <p id="profile-email-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
+                            <p id="profile-phone-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
+                            <p id="profile-join-date" class="text-xs text-gray-600 mt-1"></p>
                         </div>
                     </div>
                 </div>
@@ -198,10 +195,10 @@
             document.getElementById('wallet-referral').textContent = (userData.referralEarnings || 0).toFixed(2);
             document.getElementById('header-user-name').textContent = userData.name;
             
-            // *** NEW Profile Section Update ***
+            // *** UPDATED Profile Section ***
             document.getElementById('profile-pic-img').src = userData.photo_url || 'https://i.ibb.co/6y4n3SM/default-avatar.png';
             document.getElementById('profile-name-text').textContent = userData.name || 'ব্যবহারকারী';
-            document.getElementById('profile-email-display').textContent = userData.email || 'ইমেইল নেই';
+            document.getElementById('profile-email-display').textContent = `ইমেইল: ${userData.email || 'N/A'}`;
             document.getElementById('profile-phone-display').textContent = `ফোন: ${userData.phone || 'N/A'}`;
             if(userData.joinDate) {
                 document.getElementById('profile-join-date').textContent = `যোগদান: ${new Date(userData.joinDate).toLocaleDateString('bn-BD')}`;
@@ -286,7 +283,6 @@
             
             // Copy buttons
             document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('referral-link').value).then(() => alert('রেফারেল লিঙ্ক কপি করা হয়েছে!')));
-            document.getElementById('copy-email-btn').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('profile-email-display').textContent).then(() => alert('ইমেইল কপি করা হয়েছে!')));
             
             document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
             
