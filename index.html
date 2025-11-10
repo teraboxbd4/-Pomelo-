@@ -8,8 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <!-- Telegram Web App Script -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -119,58 +117,8 @@
         function populateSupportModal() { const container = document.getElementById('support-links-container'); container.innerHTML = ''; appSettings.supportLinks.forEach(link => { if(link.url) { container.innerHTML += `<a href="${link.url}" target="_blank" class="support-link-button"><i class="${link.icon || 'fas fa-question-circle'}"></i><span>${link.name || 'Support'}</span></a>`; } }); }
         function generateWheelSections() { const wheel = document.getElementById('wheel'); if (!wheel) return; wheel.innerHTML = ''; const colors = ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c', '#34495e']; const angle = 360 / (spinPrizes.length || 8); spinPrizes.forEach((prize, index) => { const section = document.createElement('div'); section.className = 'wheel-section'; section.style.background = colors[index % colors.length]; section.style.transform = `rotate(${index * angle}deg)`; section.innerHTML = `<span style="transform: rotate(${angle / 2}deg) translateY(-100%)">${'৳' + prize}</span>`; wheel.appendChild(section); }); }
         
-        async function initializeUserData(user) {
-            const userRef = db.collection('users').doc(user.uid);
-            const userDoc = await userRef.get();
-            if (userDoc.exists) return userDoc.data();
-
-            let userNameFromTelegram = null;
-            try {
-                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-                if (tgUser) {
-                    userNameFromTelegram = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
-                }
-            } catch (e) {
-                console.warn("Could not retrieve Telegram user data.", e);
-            }
-
-            const ref = new URLSearchParams(window.location.search).get('ref');
-            const newUserData = {
-                uid: user.uid,
-                email: user.email,
-                name: userNameFromTelegram || user.displayName || 'ব্যবহারকারী',
-                balance: 0,
-                todayEarnings: 0,
-                totalEarnings: 0,
-                referralEarnings: 0,
-                adsCompleted: 0,
-                tasksCompleted: [],
-                spinsUsed: 0,
-                lastSpinDate: null,
-                referrals: 0,
-                joinDate: new Date().toISOString(),
-                referredBy: ref || null,
-                isBanned: false
-            };
-            await userRef.set(newUserData);
-            if (ref) {
-                const referrerRef = db.collection('users').doc(ref);
-                const referralBonus = appSettings.referralBonus || 5;
-                await db.runTransaction(async (t) => {
-                    const doc = await t.get(referrerRef);
-                    if (doc.exists) {
-                        t.update(referrerRef, {
-                            balance: firebase.firestore.FieldValue.increment(referralBonus),
-                            referralEarnings: firebase.firestore.FieldValue.increment(referralBonus),
-                            referrals: firebase.firestore.FieldValue.increment(1)
-                        });
-                    }
-                });
-                await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
-            }
-            return newUserData;
-        }
-
+        async function initializeUserData(user) { const userRef = db.collection('users').doc(user.uid); const userDoc = await userRef.get(); if (userDoc.exists) return userDoc.data(); const ref = new URLSearchParams(window.location.search).get('ref'); const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false }; await userRef.set(newUserData); if (ref) { const referrerRef = db.collection('users').doc(ref); const referralBonus = appSettings.referralBonus || 5; await db.runTransaction(async (t) => { const doc = await t.get(referrerRef); if (doc.exists) { t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) }); } }); await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref); } return newUserData; }
+        
         const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
         
         async function addActivity(title, amount) { if (amount > 0) { await db.collection('activities').add({ userId: currentUser.uid, title, amount, timestamp: new Date().toISOString() }); } }
@@ -227,24 +175,6 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
-
-                try {
-                    const tg = window.Telegram?.WebApp;
-                    if (tg) {
-                        tg.ready();
-                        const tgUser = tg.initDataUnsafe?.user;
-                        if (tgUser) {
-                            const newName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
-                            if (newName && user.displayName !== newName) {
-                                await user.updateProfile({ displayName: newName });
-                                await db.collection('users').doc(user.uid).update({ name: newName });
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Could not update profile from Telegram.", e);
-                }
-
                 userData = await initializeUserData(user);
                 if (userData.isBanned) { alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।'); auth.signOut(); return; }
                 await loadAppSettings();
