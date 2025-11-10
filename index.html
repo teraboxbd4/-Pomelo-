@@ -83,32 +83,19 @@
             <section id="tasks" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-4"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-4"></div></div></section>
             <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
             
-            <!-- ### ওয়ালেট সেকশনের সম্পূর্ণ পরিবর্তন এখানে করা হয়েছে ### -->
             <section id="wallet" class="content-section">
                 <div class="glass-card p-6">
-                    
-                    <!-- ধাপ ১: উত্তোলনের শর্তাবলী (সর্বপ্রথম) -->
                     <div class="mb-6">
                         <h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3>
-                        <div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg">
-                            <!-- শর্তগুলো এখানে জাভাস্ক্রিপ্ট থেকে আসবে -->
-                        </div>
+                        <div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div>
                     </div>
-                    
-                    <!-- ধাপ ২: আমার ওয়ালেট শিরোনাম -->
                     <h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2>
-                    
-                    <!-- ধাপ ৩: ব্যালেন্স বক্স -->
                     <div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800">
                         <p>মোট ব্যালেন্স</p>
                         <p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p>
                         <p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p>
                     </div>
-
-                    <!-- ধাপ ৪: অ্যাডমিন নোটিশ -->
                     <div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div>
-
-                    <!-- আজকের আয় এবং রেফারেল আয় -->
                      <div class="space-y-4 mb-6">
                         <div class="flex justify-between items-center p-3 bg-white/70 rounded-lg">
                             <div><p class="font-semibold">আজকের আয়</p></div>
@@ -119,16 +106,10 @@
                             <p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p>
                         </div>
                     </div>
-                    
-                    <!-- টাকা উত্তোলন বাটন -->
                     <button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button>
-                    
-                    <!-- ধাপ ৫: উত্তোলনের হিস্টোরি (সবশেষে) -->
                     <div>
                         <h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3>
-                        <div id="withdrawal-history" class="space-y-3">
-                            <!-- হিস্টোরি এখানে জাভাস্ক্রিপ্ট থেকে আসবে -->
-                        </div>
+                        <div id="withdrawal-history" class="space-y-3"></div>
                     </div>
                 </div>
             </section>
@@ -196,22 +177,24 @@
         
         const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
         
+        // ### "হিস্টোরি লোড করা যায়নি" সমস্যার সমাধান ###
         async function loadWithdrawalHistory() {
             const historyContainer = document.getElementById('withdrawal-history');
-            if (!currentUser) {
-                historyContainer.innerHTML = '<p class="text-center">হিস্টোরি দেখতে লগইন করুন।</p>';
-                return;
-            }
+            if (!currentUser) { historyContainer.innerHTML = ''; return; }
             historyContainer.innerHTML = '<p>হিস্টোরি লোড হচ্ছে...</p>';
             try {
-                const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(10).get();
+                const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).limit(20).get();
                 if (snapshot.empty) {
                     historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>';
                     return;
                 }
+                
+                // তথ্য ক্লায়েন্ট-সাইডে সর্ট করা হচ্ছে
+                const withdrawals = snapshot.docs.map(doc => doc.data());
+                withdrawals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
                 historyContainer.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const withdrawal = doc.data();
+                withdrawals.forEach(withdrawal => {
                     let statusClass = '', statusText = '';
                     switch (withdrawal.status) {
                         case 'approved': statusClass = 'text-green-600 bg-green-100'; statusText = 'অনুমোদিত'; break;
@@ -292,24 +275,26 @@
         const addTaskToClaim = (taskId) => { const tasks = getTasksToClaim(); if (!tasks.includes(taskId)) { tasks.push(taskId); sessionStorage.setItem('tasksToClaim', JSON.stringify(tasks)); } };
         const removeTaskFromClaim = (taskId) => { let tasks = getTasksToClaim(); tasks = tasks.filter(id => id !== taskId); sessionStorage.setItem('tasksToClaim', JSON.stringify(tasks)); };
 
-        async function updateTasksList() { const list = document.getElementById('tasks-list'); list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>'; const snapshot = await db.collection('tasks').where('status', '==', 'active').get(); if (snapshot.empty) { list.innerHTML = '<p>আজকের জন্য কোনো টাস্ক নেই।</p>'; return; } const tasksToClaim = getTasksToClaim(); list.innerHTML = ''; snapshot.forEach(doc => { const task = doc.data(); const taskId = doc.id; const taskKey = `${taskId}_${new Date().toDateString()}`; const isCompleted = (userData.tasksCompleted || []).includes(taskKey); const isReadyToClaim = tasksToClaim.includes(taskId); let buttonHTML = ''; if (isCompleted) { buttonHTML = `<button class="w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-gray-400" disabled>সম্পন্ন</button>`; } else if (isReadyToClaim) { buttonHTML = `<button class="claim-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-green-500 hover:bg-green-600" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`; } else { buttonHTML = `<button class="do-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 hover:bg-cyan-600" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`; } const imageOrIconHTML = task.imageUrl ? `<img src="${task.imageUrl}" class="w-12 h-12 rounded-lg object-cover mr-4 flex-shrink-0">` : `<i class="${task.icon || 'fas fa-tasks'} text-cyan-500 text-3xl mr-4 w-12 text-center flex-shrink-0"></i>`; list.innerHTML += `<div class="flex items-center justify-between p-4 bg-white/30 rounded-lg"><div class="flex items-center flex-grow">${imageOrIconHTML}<div><p class="font-semibold">${task.name}</p><p class="text-sm text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p></div></div><div class="flex-shrink-0 ml-2">${buttonHTML}</div></div>`; }); }
+        async function updateTasksList() { const list = document.getElementById('tasks-list'); list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>'; try { const snapshot = await db.collection('tasks').where('status', '==', 'active').get(); if (snapshot.empty) { list.innerHTML = '<p>আজকের জন্য কোনো টাস্ক নেই।</p>'; return; } const tasksToClaim = getTasksToClaim(); list.innerHTML = ''; snapshot.forEach(doc => { const task = doc.data(); const taskId = doc.id; const taskKey = `${taskId}_${new Date().toDateString()}`; const isCompleted = (userData.tasksCompleted || []).includes(taskKey); const isReadyToClaim = tasksToClaim.includes(taskId); let buttonHTML = ''; if (isCompleted) { buttonHTML = `<button class="w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-gray-400" disabled>সম্পন্ন</button>`; } else if (isReadyToClaim) { buttonHTML = `<button class="claim-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-green-500 hover:bg-green-600" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`; } else { buttonHTML = `<button class="do-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 hover:bg-cyan-600" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`; } const imageOrIconHTML = task.imageUrl ? `<img src="${task.imageUrl}" class="w-12 h-12 rounded-lg object-cover mr-4 flex-shrink-0">` : `<i class="${task.icon || 'fas fa-tasks'} text-cyan-500 text-3xl mr-4 w-12 text-center flex-shrink-0"></i>`; list.innerHTML += `<div class="flex items-center justify-between p-4 bg-white/30 rounded-lg"><div class="flex items-center flex-grow">${imageOrIconHTML}<div><p class="font-semibold">${task.name}</p><p class="text-sm text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p></div></div><div class="flex-shrink-0 ml-2">${buttonHTML}</div></div>`; }); } catch(e){ list.innerHTML = '<p class="text-red-500">টাস্ক লোড করা যায়নি।</p>'; } }
         
+        // ### "কার্যক্রম লোড করা যায়নি" সমস্যার সমাধান ###
         async function updateRecentActivities() {
             const container = document.getElementById('recent-activity');
-            if (!currentUser) {
-                container.innerHTML = '<p class="text-center">কার্যক্রম দেখতে লগইন করুন।</p>';
-                return;
-            }
+            if (!currentUser) { container.innerHTML = ''; return; }
             container.innerHTML = '<p>লোড হচ্ছে...</p>';
             try {
-                const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(5).get();
+                const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).limit(5).get();
                 if(snapshot.empty) {
                     container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>';
                     return;
                 }
+                
+                // তথ্য ক্লায়েন্ট-সাইডে সর্ট করা হচ্ছে
+                const activities = snapshot.docs.map(doc => doc.data());
+                activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
                 container.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const act = doc.data();
+                activities.forEach(act => {
                     container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`;
                 });
             } catch (error) {
