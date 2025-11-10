@@ -14,7 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; }
-        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow-x: hidden; position: relative; }
+        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow: hidden; /* Prevent body scroll */ }
+        .app-wrapper { height: 100vh; display: flex; flex-direction: column; }
+        main { flex-grow: 1; overflow-y: auto; /* Make main content scrollable */ }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
         .btn-primary { background: linear-gradient(135deg, #00CED1, #20B2AA); color: white; border-radius: 16px; padding: 14px 24px; font-weight: bold; transition: all 0.3s ease; border: none; }
         .btn-primary:disabled { background: #999; opacity: 0.7; cursor: not-allowed; }
@@ -43,7 +45,7 @@
         .modal-content { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255, 255, 255, 0.3); }
         .profile-pic-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
         .profile-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .support-fab { position: fixed; bottom: 80px; right: 20px; width: 50px; height: 50px; background-color: #00CED1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 999; }
+        .support-fab { position: fixed; bottom: 80px; right: 20px; width: 50px; height: 50px; background-color: #00CED1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 999; transition: opacity 0.3s, visibility 0.3s; }
         
         #support-links-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; }
         .support-link-button { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; background: rgba(255, 255, 255, 0.4); border-radius: 16px; text-decoration: none; color: #1F2937; border: 1px solid rgba(255, 255, 255, 0.3); transition: background 0.3s ease; }
@@ -83,56 +85,58 @@
         </div>
     </div>
 
-    <div id="main-app" class="hidden">
-        <header class="p-4 flex justify-between items-center glass-card m-2 rounded-2xl">
+    <div id="main-app" class="hidden app-wrapper">
+        <header class="p-4 flex justify-between items-center glass-card m-2 rounded-2xl flex-shrink-0">
             <div><h1 class="text-2xl font-bold">Click2Cash</h1><p class="text-gray-600">আপনার আয়ের পথ</p></div>
             <div class="text-right"><p id="header-user-name" class="font-semibold"></p><p class="text-sm">ব্যালেন্স: ৳<span id="header-balance">0.00</span></p></div>
         </header>
-        <main class="p-4 max-w-lg mx-auto">
-            <section id="home" class="content-section active">
-                <div class="glass-card p-6 mb-6 text-center"><h2 class="text-lg">আপনার বর্তমান ব্যালেন্স</h2><p class="text-5xl font-bold">৳<span id="wallet-balance">0.00</span></p><div class="mt-4 flex justify-around text-sm"><div><p>আজকের আয়</p><p class="font-bold">৳<span id="today-earnings">0.00</span></p></div><div><p>রেফারেল</p><p class="font-bold"><span id="referral-count">0</span> জন</p></div></div><button id="withdraw-btn-home" class="btn-primary mt-6 w-full"><i class="fas fa-money-bill-wave mr-2"></i> টাকা তুলুন</button></div>
-                <div class="grid grid-cols-2 gap-4 mb-6"><button id="watch-ad-btn" class="glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-video text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">বিজ্ঞাপন দেখুন</span><span id="watch-ad-notice" class="text-xs mt-1"></span></button><button data-target="tasks" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-tasks text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">টাস্ক করুন</span><span id="do-task-notice" class="text-xs mt-1"></span></button><button data-target="spin" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-dharmachakra text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">স্পিন করুন</span><span id="spin-wheel-notice" class="text-xs mt-1"></span></button><button data-target="profile" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-user-plus text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">রেফার করুন</span><span id="referral-notice" class="text-xs mt-1"></span></button></div>
-                <div class="glass-card p-6"><h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-history mr-3 text-cyan-500"></i>সাম্প্রতিক কার্যক্রম</h3><div id="recent-activity" class="space-y-3"></div></div>
-            </section>
-            <section id="tasks" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-4"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-4"></div></div></section>
-            <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
-            <section id="wallet" class="content-section">
-                <div class="glass-card p-6"><div class="mb-6"><h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3><div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div></div><h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2><div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div><div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div><div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div><button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button><div><h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3><div id="withdrawal-history" class="space-y-3"></div></div></div>
-            </section>
-            <section id="profile" class="content-section">
-                <div class="glass-card p-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="profile-pic-container">
-                            <img id="profile-pic-img" src="https://i.ibb.co/6y4n3SM/default-avatar.png" alt="Profile Picture" class="profile-pic">
-                        </div>
-                        <div class="flex-grow">
-                            <div id="name-display-container" class="flex items-center">
-                                <h2 id="profile-name-text" class="text-xl font-bold text-gray-800"></h2>
-                                <i id="edit-name-btn" class="fas fa-pencil-alt ml-3 text-sm text-gray-600 cursor-pointer hover:text-cyan-600"></i>
+        <main class="p-4">
+            <div class="pb-24"> <!-- Padding bottom to ensure content isn't hidden by nav bar -->
+                <section id="home" class="content-section active">
+                    <div class="glass-card p-6 mb-6 text-center"><h2 class="text-lg">আপনার বর্তমান ব্যালেন্স</h2><p class="text-5xl font-bold">৳<span id="wallet-balance">0.00</span></p><div class="mt-4 flex justify-around text-sm"><div><p>আজকের আয়</p><p class="font-bold">৳<span id="today-earnings">0.00</span></p></div><div><p>রেফারেল</p><p class="font-bold"><span id="referral-count">0</span> জন</p></div></div><button id="withdraw-btn-home" class="btn-primary mt-6 w-full"><i class="fas fa-money-bill-wave mr-2"></i> টাকা তুলুন</button></div>
+                    <div class="grid grid-cols-2 gap-4 mb-6"><button id="watch-ad-btn" class="glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-video text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">বিজ্ঞাপন দেখুন</span><span id="watch-ad-notice" class="text-xs mt-1"></span></button><button data-target="tasks" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-tasks text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">টাস্ক করুন</span><span id="do-task-notice" class="text-xs mt-1"></span></button><button data-target="spin" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-dharmachakra text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">স্পিন করুন</span><span id="spin-wheel-notice" class="text-xs mt-1"></span></button><button data-target="profile" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-user-plus text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">রেফার করুন</span><span id="referral-notice" class="text-xs mt-1"></span></button></div>
+                    <div class="glass-card p-6"><h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-history mr-3 text-cyan-500"></i>সাম্প্রতিক কার্যক্রম</h3><div id="recent-activity" class="space-y-3"></div></div>
+                </section>
+                <section id="tasks" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-4"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-4"></div></div></section>
+                <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
+                <section id="wallet" class="content-section">
+                    <div class="glass-card p-6"><div class="mb-6"><h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3><div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div></div><h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2><div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div><div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div><div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div><button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button><div><h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3><div id="withdrawal-history" class="space-y-3"></div></div></div>
+                </section>
+                <section id="profile" class="content-section">
+                    <div class="glass-card p-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="profile-pic-container">
+                                <img id="profile-pic-img" src="https://i.ibb.co/6y4n3SM/default-avatar.png" alt="Profile Picture" class="profile-pic">
                             </div>
-                            <div id="name-edit-container" class="hidden">
-                                <input type="text" id="profile-name-input" class="w-full text-xl font-bold p-1 border rounded-md">
-                                <button id="save-name-btn" class="btn-primary py-1 px-3 mt-1 text-sm">সেভ করুন</button>
+                            <div class="flex-grow">
+                                <div id="name-display-container" class="flex items-center">
+                                    <h2 id="profile-name-text" class="text-xl font-bold text-gray-800"></h2>
+                                    <i id="edit-name-btn" class="fas fa-pencil-alt ml-3 text-sm text-gray-600 cursor-pointer hover:text-cyan-600"></i>
+                                </div>
+                                <div id="name-edit-container" class="hidden">
+                                    <input type="text" id="profile-name-input" class="w-full text-xl font-bold p-1 border rounded-md">
+                                    <button id="save-name-btn" class="btn-primary py-1 px-3 mt-1 text-sm">সেভ করুন</button>
+                                </div>
+                                <p id="profile-email-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
+                                <p id="profile-phone-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
+                                <p id="profile-join-date" class="text-xs text-gray-600 mt-1"></p>
                             </div>
-                            <p id="profile-email-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
-                            <p id="profile-phone-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
-                            <p id="profile-join-date" class="text-xs text-gray-600 mt-1"></p>
                         </div>
                     </div>
-                </div>
-
-                <div class="glass-card p-6 mt-6">
-                     <div class="p-4 bg-white/70 rounded-lg mb-6"><p class="mb-1">আপনার রেফারেল লিঙ্ক</p><div class="flex"><input type="text" id="referral-link" class="flex-grow p-2 bg-gray-100 rounded-l-lg" readonly><button id="copy-link" class="bg-cyan-500 text-white px-4 rounded-r-lg"><i class="fas fa-copy"></i></button></div></div>
-                    <div class="grid grid-cols-2 gap-4 mb-6"><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-cyan-500" id="profile-tasks">0</p><p>সম্পন্ন টাস্ক</p></div><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-green-500" id="profile-referrals">0</p><p>রেফারেল</p></div></div>
-                    <button id="logout-btn" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">লগ আউট</button>
-                </div>
-            </section>
+                    <div class="glass-card p-6 mt-6">
+                         <div class="p-4 bg-white/70 rounded-lg mb-6"><p class="mb-1">আপনার রেফারেল লিঙ্ক</p><div class="flex"><input type="text" id="referral-link" class="flex-grow p-2 bg-gray-100 rounded-l-lg" readonly><button id="copy-link" class="bg-cyan-500 text-white px-4 rounded-r-lg"><i class="fas fa-copy"></i></button></div></div>
+                        <div class="grid grid-cols-2 gap-4 mb-6"><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-cyan-500" id="profile-tasks">0</p><p>সম্পন্ন টাস্ক</p></div><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-green-500" id="profile-referrals">0</p><p>রেফারেল</p></div></div>
+                        <button id="logout-btn" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">লগ আউট</button>
+                    </div>
+                </section>
+            </div>
         </main>
-        <nav class="bottom-nav"><a class="nav-item active" data-section="home"><i class="fas fa-home"></i><span>হোম</span></a><a class="nav-item" data-section="tasks"><i class="fas fa-tasks"></i><span>টাস্ক</span></a><a class="nav-item" data-section="spin"><i class="fas fa-dharmachakra"></i><span>স্পিন</span></a><a class="nav-item" data-section="wallet"><i class="fas fa-wallet"></i><span>ওয়ালেট</span></a><a class="nav-item" data-section="profile"><i class="fas fa-user"></i><span>প্রোফাইল</span></a></nav>
-        <div id="support-fab" class="support-fab"><i class="fas fa-headset"></i></div>
-        <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
-        <div id="support-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2><div id="support-links-container"></div><button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button></div></div>
+        <nav class="bottom-nav flex-shrink-0"><a class="nav-item active" data-section="home"><i class="fas fa-home"></i><span>হোম</span></a><a class="nav-item" data-section="tasks"><i class="fas fa-tasks"></i><span>টাস্ক</span></a><a class="nav-item" data-section="spin"><i class="fas fa-dharmachakra"></i><span>স্পিন</span></a><a class="nav-item" data-section="wallet"><i class="fas fa-wallet"></i><span>ওয়ালেট</span></a><a class="nav-item" data-section="profile"><i class="fas fa-user"></i><span>প্রোফাইল</span></a></nav>
     </div>
+        
+    <div id="support-fab" class="support-fab"><i class="fas fa-headset"></i></div>
+    <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
+    <div id="support-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2><div id="support-links-container"></div><button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button></div></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBowdaBVkAZa7OLr0wmJxjn9JqSlsy7l5o", authDomain: "pomelo-50690.firebaseapp.com", projectId: "pomelo-50690", storageBucket: "pomelo-50690.firebasestorage.app", messagingSenderId: "687340787607", appId: "1:687340787607:web:5c2fe2d6d0ff09c6c956d2" };
@@ -145,8 +149,8 @@
         const loader = document.getElementById('loader');
         const showLoader = () => loader.style.display = 'flex';
         const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); };
-        const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').classList.add('hidden'); hideLoader(); };
-        const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').classList.remove('hidden'); hideLoader(); };
+        const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').style.display = 'none'; hideLoader(); };
+        const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').style.display = 'flex'; hideLoader(); };
         const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
@@ -293,8 +297,6 @@
             document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
             document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
             document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("আপনার পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।\n\nঅনুগ্রহ করে আপনার ইমেইলের ইনবক্স চেক করুন। যদি ইনবক্সে ইমেইলটি খুঁজে না পান, তবে স্প্যাম (Spam) বা জাঙ্ক (Junk) ফোল্ডার চেক করতে ভুলবেন না।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); console.error("Password Reset Error:", error); } } });
-            
-            // *** MODIFIED LOGIN FORM SUBMIT ***
             document.getElementById('login-form-element').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = e.target.querySelector('button[type="submit"]');
@@ -312,14 +314,11 @@
                     btn.textContent = "লগ ইন";
                 }
             });
-
-            // *** MODIFIED REGISTER FORM SUBMIT ***
             document.getElementById('register-form-element').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = e.target.querySelector('button[type="submit"]');
                 btn.disabled = true;
                 btn.textContent = "প্রসেসিং...";
-
                 const password = document.getElementById('register-password').value;
                 const confirmPassword = document.getElementById('register-confirm-password').value;
                 if (password !== confirmPassword) {
@@ -351,7 +350,7 @@
             navItems.forEach(item => item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.section); }));
             navButtons.forEach(button => button.addEventListener('click', (e) => { e.preventDefault(); navigateTo(button.dataset.target); }));
 
-            // App Actions (Ads, Tasks, Spin)
+            // App Actions
             document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { await showMandatoryAdAfterAction(adSettings); const rewardAmount = appSettings.watchAdReward || 0; if (rewardAmount > 0) { const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(rewardAmount), todayEarnings: inc(rewardAmount), totalEarnings: inc(rewardAmount), adsCompleted: inc(1) }); await addActivity('বিজ্ঞাপন দেখা', rewardAmount); alert(`ধন্যবাদ! ৳${rewardAmount.toFixed(2)} যোগ করা হয়েছে।`); } } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
             document.getElementById('tasks-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const taskId = btn.dataset.id; const taskKey = `${taskId}_${new Date().toDateString()}`; if (btn.classList.contains('do-task-btn')) { const link = btn.dataset.link; if (link) window.open(link, '_blank'); addTaskToClaim(taskId); updateTasksList(); } if (btn.classList.contains('claim-task-btn')) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; try { await showMandatoryAdAfterAction(taskAdSettings); const reward = parseFloat(btn.dataset.reward); const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(reward), todayEarnings: inc(reward), totalEarnings: inc(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক পুরস্কার', reward); removeTaskFromClaim(taskId); alert(`অভিনন্দন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Task claim ad failed:", error); alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { updateTasksList(); } } });
             const spinButton = document.getElementById('spin-wheel-btn'), wheel = document.getElementById('wheel'); let isSpinning = false;
@@ -366,13 +365,27 @@
             
             // Copy buttons
             document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('referral-link').value).then(() => alert('রেফারেল লিঙ্ক কপি করা হয়েছে!')));
-            
             document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
             
-            // Support Modal
-            const supportModal = document.getElementById('support-modal'); const supportFab = document.getElementById('support-fab');
+            // Support Modal & FAB Scroll Logic
+            const supportModal = document.getElementById('support-modal');
+            const supportFab = document.getElementById('support-fab');
+            const mainContentArea = document.querySelector('main'); // *** GET THE CORRECT SCROLLABLE ELEMENT ***
+            let scrollTimeout;
+
             supportFab.addEventListener('click', () => supportModal.style.display = 'flex');
             document.getElementById('close-support-modal').addEventListener('click', () => supportModal.style.display = 'none');
+
+            // *** ATTACH THE LISTENER TO THE CORRECT ELEMENT ***
+            mainContentArea.addEventListener('scroll', () => {
+                supportFab.style.opacity = '0';
+                supportFab.style.visibility = 'hidden';
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    supportFab.style.opacity = '1';
+                    supportFab.style.visibility = 'visible';
+                }, 300);
+            });
         });
 
         // Main Auth State Change Listener
