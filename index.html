@@ -14,9 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; }
-        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow: hidden; /* Prevent body scroll */ }
+        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow: hidden; }
         .app-wrapper { height: 100vh; display: flex; flex-direction: column; }
-        main { flex-grow: 1; overflow-y: auto; /* Make main content scrollable */ }
+        main { flex-grow: 1; overflow-y: auto; }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
         .btn-primary { background: linear-gradient(135deg, #00CED1, #20B2AA); color: white; border-radius: 16px; padding: 14px 24px; font-weight: bold; transition: all 0.3s ease; border: none; }
         .btn-primary:disabled { background: #999; opacity: 0.7; cursor: not-allowed; }
@@ -45,7 +45,29 @@
         .modal-content { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255, 255, 255, 0.3); }
         .profile-pic-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
         .profile-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .support-fab { position: fixed; bottom: 80px; right: 20px; width: 50px; height: 50px; background-color: #00CED1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 999; transition: opacity 0.3s, visibility 0.3s; }
+        
+        /* *** MODIFIED STYLES FOR SUPPORT FAB *** */
+        .support-fab {
+            position: fixed;
+            bottom: 85px; /* Slightly raised position */
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #00CED1;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 999;
+            transition: transform 0.4s ease-in-out; /* Smooth transition for movement */
+        }
+        .support-fab.hidden {
+            transform: translateX(100px); /* Move it off-screen to the right */
+        }
         
         #support-links-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; }
         .support-link-button { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; background: rgba(255, 255, 255, 0.4); border-radius: 16px; text-decoration: none; color: #1F2937; border: 1px solid rgba(255, 255, 255, 0.3); transition: background 0.3s ease; }
@@ -55,10 +77,10 @@
 
     </style>
 </head>
-<body class="pb-24">
+<body>
     <div id="loader"><i class="fas fa-lemon loader-icon"></i><p class="loader-text">লোড হচ্ছে...</p></div>
 
-    <div id="auth-section" class="flex justify-center items-center min-h-screen p-5" style="display: none;">
+    <div id="auth-section" class="flex justify-content-center items-center min-h-screen p-5" style="display: none;">
         <div class="glass-card w-full max-w-md p-8">
             <div id="login-form">
                 <h2 class="text-2xl font-bold mb-6 text-center">লগ ইন করুন</h2>
@@ -370,20 +392,18 @@
             // Support Modal & FAB Scroll Logic
             const supportModal = document.getElementById('support-modal');
             const supportFab = document.getElementById('support-fab');
-            const mainContentArea = document.querySelector('main'); // *** GET THE CORRECT SCROLLABLE ELEMENT ***
+            const mainContentArea = document.querySelector('main'); 
             let scrollTimeout;
 
             supportFab.addEventListener('click', () => supportModal.style.display = 'flex');
             document.getElementById('close-support-modal').addEventListener('click', () => supportModal.style.display = 'none');
 
-            // *** ATTACH THE LISTENER TO THE CORRECT ELEMENT ***
+            // *** MODIFIED SCROLL LISTENER ***
             mainContentArea.addEventListener('scroll', () => {
-                supportFab.style.opacity = '0';
-                supportFab.style.visibility = 'hidden';
+                supportFab.classList.add('hidden'); // Add class to trigger the smooth transform
                 clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => {
-                    supportFab.style.opacity = '1';
-                    supportFab.style.visibility = 'visible';
+                    supportFab.classList.remove('hidden'); // Remove class to bring it back
                 }, 300);
             });
         });
