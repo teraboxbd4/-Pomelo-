@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Click2Cash 🍋 </title>
-    <!-- Firebase SDK, Tailwind CSS, Font Awesome, Google Fonts -->
+    <!-- Firebase SDK, Telegram Script, Tailwind CSS, Font Awesome, Google Fonts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <!-- ### নতুন সংযোজন: টেলিগ্রাম ওয়েব অ্যাপের জন্য অত্যাবশ্যকীয় স্ক্রিপ্ট ### -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -26,6 +25,13 @@
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* --- নতুন লোডিং স্ক্রিনের স্টাইল --- */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #87CEEB, #98FB98); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+        .loader-icon { font-size: 4rem; color: #fff; animation: spin 2s linear infinite, pulse 2.5s ease-in-out infinite; }
+        .loader-text { margin-top: 20px; color: #fff; font-size: 1.2rem; font-weight: 500; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        /* --- অন্যান্য স্টাইল --- */
         .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; display: flex; justify-content: center; align-items: center; }
         .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background: linear-gradient(160deg, #ff7675, #d63031); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
         .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
@@ -46,8 +52,14 @@
     </style>
 </head>
 <body class="pb-24">
-    <!-- Auth Section -->
-    <div id="auth-section" class="flex justify-center items-center min-h-screen p-5">
+    <!-- নতুন লোডার -->
+    <div id="loader">
+        <i class="fas fa-lemon loader-icon"></i>
+        <p class="loader-text">লোড হচ্ছে...</p>
+    </div>
+
+    <!-- Auth Section (Initially hidden) -->
+    <div id="auth-section" class="flex justify-center items-center min-h-screen p-5" style="display: none;">
         <div class="glass-card w-full max-w-md p-8">
             <div id="login-form">
                 <h2 class="text-2xl font-bold mb-6 text-center">লগ ইন করুন</h2>
@@ -59,12 +71,15 @@
                 </form>
                 <p class="text-center">অ্যাকাউন্ট নেই? <a href="#" id="show-register" class="text-cyan-600 hover:underline">রেজিস্টার করুন</a></p>
             </div>
+            <!-- নতুন রেজিস্ট্রেশন ফর্ম -->
             <div id="register-form" class="hidden">
                 <h2 class="text-2xl font-bold mb-6 text-center">রেজিস্টার করুন</h2>
                 <form id="register-form-element">
                     <div class="mb-4"><label class="block mb-2">পুরো নাম</label><input type="text" id="register-name" class="w-full p-3" required></div>
                     <div class="mb-4"><label class="block mb-2">ইমেইল</label><input type="email" id="register-email" class="w-full p-3" required></div>
-                    <div class="mb-6"><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="register-password" class="w-full p-3" required></div>
+                    <div class="mb-4"><label class="block mb-2">ফোন নম্বর</label><input type="tel" id="register-phone" class="w-full p-3" required></div>
+                    <div class="mb-4"><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="register-password" class="w-full p-3" required></div>
+                    <div class="mb-6"><label class="block mb-2">কনফার্ম পাসওয়ার্ড</label><input type="password" id="register-confirm-password" class="w-full p-3" required></div>
                     <button type="submit" class="btn-primary w-full py-3 mb-4">রেজিস্টার</button>
                 </form>
                 <p class="text-center">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="#" id="show-login" class="text-cyan-600 hover:underline">লগ ইন করুন</a></p>
@@ -72,7 +87,7 @@
         </div>
     </div>
 
-    <!-- Main App -->
+    <!-- Main App (Initially hidden) -->
     <div id="main-app" class="hidden">
         <header class="p-4 flex justify-between items-center glass-card m-2 rounded-2xl">
             <div><h1 class="text-2xl font-bold">Click2Cash</h1><p class="text-gray-600">আপনার আয়ের পথ</p></div>
@@ -88,56 +103,33 @@
             <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
             <section id="wallet" class="content-section">
                 <div class="glass-card p-6">
-                    <div class="mb-6">
-                        <h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3>
-                        <div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div>
-                    </div>
+                    <div class="mb-6"><h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3><div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div></div>
                     <h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2>
-                    <div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800">
-                        <p>মোট ব্যালেন্স</p>
-                        <p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p>
-                        <p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p>
-                    </div>
+                    <div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div>
                     <div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div>
-                     <div class="space-y-4 mb-6">
-                        <div class="flex justify-between items-center p-3 bg-white/70 rounded-lg">
-                            <div><p class="font-semibold">আজকের আয়</p></div>
-                            <p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p>
-                        </div>
-                        <div class="flex justify-between items-center p-3 bg-white/70 rounded-lg">
-                            <div><p class="font-semibold">রেফারেল আয়</p></div>
-                            <p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p>
-                        </div>
-                    </div>
+                     <div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div>
                     <button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button>
-                    <div>
-                        <h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3>
-                        <div id="withdrawal-history" class="space-y-3"></div>
-                    </div>
+                    <div><h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3><div id="withdrawal-history" class="space-y-3"></div></div>
                 </div>
             </section>
-            <section id="profile" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-6"><i class="fas fa-user mr-3 text-cyan-500"></i>আমার প্রোফাইল</h2><div class="flex items-center mb-6"><div class="w-16 h-16 rounded-full bg-cyan-400 flex items-center justify-center text-white text-2xl font-bold mr-4"><i class="fas fa-user"></i></div><div><p id="profile-name" class="font-bold text-xl"></p><p>সদস্য since <span id="join-date"></span></p></div></div><div class="space-y-4 mb-6"><div class="p-4 bg-white/70 rounded-lg"><p class="mb-1">আপনার রেফারেল লিঙ্ক</p><div class="flex"><input type="text" id="referral-link" class="flex-grow p-2 bg-gray-100 rounded-l-lg" readonly><button id="copy-link" class="bg-cyan-500 text-white px-4 rounded-r-lg"><i class="fas fa-copy"></i></button></div></div><div class="grid grid-cols-2 gap-4"><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-cyan-500" id="profile-tasks">0</p><p>সম্পন্ন টাস্ক</p></div><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-green-500" id="profile-referrals">0</p><p>রেফারেল</p></div></div></div><button id="logout-btn" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">লগ আউট</button></div></section>
+            <section id="profile" class="content-section">
+                <div class="glass-card p-6">
+                    <h2 class="text-2xl font-bold mb-6"><i class="fas fa-user mr-3 text-cyan-500"></i>আমার প্রোফাইল</h2>
+                    <div class="space-y-4 mb-6">
+                        <div class="p-4 bg-white/70 rounded-lg"><label class="block mb-1 font-semibold">পুরো নাম</label><input type="text" id="profile-name-edit" class="w-full p-2"></div>
+                        <div class="p-4 bg-white/70 rounded-lg"><label class="block mb-1 font-semibold">ফোন নম্বর</label><input type="tel" id="profile-phone-edit" class="w-full p-2"></div>
+                        <div class="p-4 bg-white/70 rounded-lg"><p class="mb-1">আপনার রেফারেল লিঙ্ক</p><div class="flex"><input type="text" id="referral-link" class="flex-grow p-2 bg-gray-100 rounded-l-lg" readonly><button id="copy-link" class="bg-cyan-500 text-white px-4 rounded-r-lg"><i class="fas fa-copy"></i></button></div></div>
+                        <button id="save-profile-btn" class="btn-primary w-full py-3">পরিবর্তন সেভ করুন</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6"><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-cyan-500" id="profile-tasks">0</p><p>সম্পন্ন টাস্ক</p></div><div class="p-3 bg-white/70 rounded-lg text-center"><p class="text-2xl font-bold text-green-500" id="profile-referrals">0</p><p>রেফারেল</p></div></div>
+                    <button id="logout-btn" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">লগ আউট</button>
+                </div>
+            </section>
         </main>
         <nav class="bottom-nav"><a class="nav-item active" data-section="home"><i class="fas fa-home"></i><span>হোম</span></a><a class="nav-item" data-section="tasks"><i class="fas fa-tasks"></i><span>টাস্ক</span></a><a class="nav-item" data-section="spin"><i class="fas fa-dharmachakra"></i><span>স্পিন</span></a><a class="nav-item" data-section="wallet"><i class="fas fa-wallet"></i><span>ওয়ালেট</span></a><a class="nav-item" data-section="profile"><i class="fas fa-user"></i><span>প্রোফাইল</span></a></nav>
         <div id="support-fab" class="support-fab" style="display: none;"><i class="fas fa-headset"></i></div>
-        <div id="withdraw-modal" class="modal">
-            <div class="modal-content">
-                <h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2>
-                <form id="withdraw-form">
-                    <div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div>
-                    <div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div>
-                    <div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div>
-                </form>
-            </div>
-        </div>
-        <div id="support-modal" class="modal">
-            <div class="modal-content">
-                <h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2>
-                <div id="support-links-container"></div>
-                <button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button>
-            </div>
-        </div>
+        <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
+        <div id="support-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2><div id="support-links-container"></div><button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button></div></div>
     </div>
 
     <script>
@@ -147,16 +139,22 @@
         const db = firebase.firestore();
         let currentUser = null, userData = null, userListener = null, adSettings = [], spinAdSettings = [], taskAdSettings = [], appSettings = {};
         let spinPrizes = [];
-
-        const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').classList.add('hidden'); };
-        const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').classList.remove('hidden'); };
+        
+        const loader = document.getElementById('loader');
+        const showLoader = () => loader.style.display = 'flex';
+        const hideLoader = () => {
+            loader.style.opacity = '0';
+            setTimeout(() => { loader.style.display = 'none'; }, 500);
+        };
+        const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').classList.add('hidden'); hideLoader(); };
+        const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').classList.remove('hidden'); hideLoader(); };
         const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
         async function loadAppSettings() {
             const doc = await db.collection('app_settings').doc('config').get();
             const defaults = {
-                minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে।'
+                minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে.'
             };
             appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults;
             spinPrizes = appSettings.spinPrizes;
@@ -172,46 +170,16 @@
         function populateSupportModal() { const container = document.getElementById('support-links-container'); container.innerHTML = ''; appSettings.supportLinks.forEach(link => { if(link.url) { container.innerHTML += `<a href="${link.url}" target="_blank" class="support-link-button"><i class="${link.icon || 'fas fa-question-circle'}"></i><span>${link.name || 'Support'}</span></a>`; } }); }
         function generateWheelSections() { const wheel = document.getElementById('wheel'); if (!wheel) return; wheel.innerHTML = ''; const colors = ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c', '#34495e']; const angle = 360 / (spinPrizes.length || 8); spinPrizes.forEach((prize, index) => { const section = document.createElement('div'); section.className = 'wheel-section'; section.style.background = colors[index % colors.length]; section.style.transform = `rotate(${index * angle}deg)`; section.innerHTML = `<span style="transform: rotate(${angle / 2}deg) translateY(-100%)">${'৳' + prize}</span>`; wheel.appendChild(section); }); }
         
-        // ### রেফারেল কাউন্ট সমস্যার সমাধান ###
         async function initializeUserData(user) {
             const userRef = db.collection('users').doc(user.uid);
             const userDoc = await userRef.get();
             if (userDoc.exists) return userDoc.data();
-
             let ref = null;
-            // প্রথমে টেলিগ্রামের startapp প্যারামিটার চেক করা হচ্ছে
-            try {
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
-                    const initData = new URLSearchParams(window.Telegram.WebApp.initData);
-                    if (initData.has('start_param')) {
-                        ref = initData.get('start_param');
-                    }
-                }
-            } catch(e) { console.error("Could not read Telegram start_param", e); }
-            
-            // যদি startapp না পাওয়া যায়, তবে পুরোনো পদ্ধতির URL থেকে ref খোঁজা হবে
-            if (!ref) {
-                ref = new URLSearchParams(window.location.search).get('ref');
-            }
-
-            const newUserData = { uid: user.uid, email: user.email, name: user.displayName || 'ব্যবহারকারী', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false };
+            try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) { const initData = new URLSearchParams(window.Telegram.WebApp.initData); if (initData.has('start_param')) { ref = initData.get('start_param'); } } } catch(e) { console.error("Could not read Telegram start_param", e); }
+            if (!ref) { ref = new URLSearchParams(window.location.search).get('ref'); }
+            const newUserData = { uid: user.uid, email: user.email, name: document.getElementById('register-name').value || user.displayName || 'ব্যবহারকারী', phone: document.getElementById('register-phone').value || '', balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false };
             await userRef.set(newUserData);
-            
-            if (ref) {
-                const referrerRef = db.collection('users').doc(ref);
-                const referralBonus = appSettings.referralBonus || 5;
-                await db.runTransaction(async (t) => {
-                    const doc = await t.get(referrerRef);
-                    if (doc.exists) {
-                        t.update(referrerRef, {
-                            balance: firebase.firestore.FieldValue.increment(referralBonus),
-                            referralEarnings: firebase.firestore.FieldValue.increment(referralBonus),
-                            referrals: firebase.firestore.FieldValue.increment(1)
-                        });
-                    }
-                });
-                await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
-            }
+            if (ref) { const referrerRef = db.collection('users').doc(ref); const referralBonus = appSettings.referralBonus || 5; await db.runTransaction(async (t) => { const doc = await t.get(referrerRef); if (doc.exists) { t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) }); } }); await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref); }
             return newUserData;
         }
         
@@ -223,33 +191,12 @@
             historyContainer.innerHTML = '<p>হিস্টোরি লোড হচ্ছে...</p>';
             try {
                 const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).limit(20).get();
-                if (snapshot.empty) {
-                    historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>';
-                    return;
-                }
+                if (snapshot.empty) { historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>'; return; }
                 const withdrawals = snapshot.docs.map(doc => doc.data());
                 withdrawals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 historyContainer.innerHTML = '';
-                withdrawals.forEach(withdrawal => {
-                    let statusClass = '', statusText = '';
-                    switch (withdrawal.status) {
-                        case 'approved': statusClass = 'text-green-600 bg-green-100'; statusText = 'অনুমোদিত'; break;
-                        case 'rejected': statusClass = 'text-red-600 bg-red-100'; statusText = 'প্রত্যাখ্যাত'; break;
-                        default: statusClass = 'text-yellow-600 bg-yellow-100'; statusText = 'পেন্ডিং';
-                    }
-                    historyContainer.innerHTML += `
-                        <div class="p-3 bg-white/70 rounded-lg flex justify-between items-center">
-                            <div>
-                                <p class="font-bold">৳${withdrawal.amount.toFixed(2)} - ${withdrawal.method}</p>
-                                <p class="text-sm text-gray-600">${new Date(withdrawal.timestamp).toLocaleDateString('bn-BD')}</p>
-                            </div>
-                            <span class="px-3 py-1 text-sm font-semibold rounded-full ${statusClass}">${statusText}</span>
-                        </div>`;
-                });
-            } catch (error) {
-                console.error("Error loading withdrawal history:", error);
-                historyContainer.innerHTML = '<p class="text-center text-red-500">হিস্টোরি লোড করা যায়নি।</p>';
-            }
+                withdrawals.forEach(withdrawal => { let statusClass = '', statusText = ''; switch (withdrawal.status) { case 'approved': statusClass = 'text-green-600 bg-green-100'; statusText = 'অনুমোদিত'; break; case 'rejected': statusClass = 'text-red-600 bg-red-100'; statusText = 'প্রত্যাখ্যাত'; break; default: statusClass = 'text-yellow-600 bg-yellow-100'; statusText = 'পেন্ডিং'; } historyContainer.innerHTML += `<div class="p-3 bg-white/70 rounded-lg flex justify-between items-center"><div><p class="font-bold">৳${withdrawal.amount.toFixed(2)} - ${withdrawal.method}</p><p class="text-sm text-gray-600">${new Date(withdrawal.timestamp).toLocaleDateString('bn-BD')}</p></div><span class="px-3 py-1 text-sm font-semibold rounded-full ${statusClass}">${statusText}</span></div>`; });
+            } catch (error) { console.error("Error loading withdrawal history:", error); historyContainer.innerHTML = '<p class="text-center text-red-500">হিস্টোরি লোড করা যায়নি।</p>'; }
         }
         
         async function addActivity(title, amount) { if (amount > 0) { await db.collection('activities').add({ userId: currentUser.uid, title, amount, timestamp: new Date().toISOString() }); } }
@@ -262,17 +209,11 @@
             document.getElementById('referral-count').textContent = userData.referrals || 0;
             document.getElementById('wallet-referral').textContent = (userData.referralEarnings || 0).toFixed(2);
             document.getElementById('user-name').textContent = userData.name;
-            document.getElementById('profile-name').textContent = userData.name;
-            document.getElementById('join-date').textContent = new Date(userData.joinDate).toLocaleDateString('bn-BD');
-            
+            document.getElementById('profile-name-edit').value = userData.name;
+            document.getElementById('profile-phone-edit').value = userData.phone || '';
             let referralLink = '';
-            if (appSettings.botUsername && appSettings.appShortName) {
-                referralLink = `https://t.me/${appSettings.botUsername}/${appSettings.appShortName}?startapp=${currentUser.uid}`;
-            } else {
-                referralLink = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`;
-            }
+            if (appSettings.botUsername && appSettings.appShortName) { referralLink = `https://t.me/${appSettings.botUsername}/${appSettings.appShortName}?startapp=${currentUser.uid}`; } else { referralLink = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`; }
             document.getElementById('referral-link').value = referralLink;
-
             document.getElementById('profile-tasks').textContent = (userData.tasksCompleted || []).filter(key => key.endsWith(new Date().toDateString())).length;
             document.getElementById('profile-referrals').textContent = userData.referrals || 0;
             document.getElementById('min-withdrawal-text').textContent = (appSettings.minWithdrawal || 50).toFixed(2);
@@ -282,34 +223,15 @@
             document.getElementById('referral-notice').textContent = appSettings.referralNotice || (appSettings.referralBonus ? `৳${appSettings.referralBonus.toFixed(2)} বোনাস পান` : '');
             document.getElementById('daily-spin-limit-text').textContent = appSettings.dailySpins || 3;
             document.getElementById('wallet-notice').textContent = appSettings.walletNotice || '';
-            
             const conditionsContainer = document.getElementById('withdrawal-conditions');
-            const userReferrals = userData.referrals || 0;
-            const userBalance = userData.balance || 0;
-            const minReferrals = appSettings.minReferrals || 0;
-            const minBalance = appSettings.minBalance || 0;
-            const referralsMet = userReferrals >= minReferrals;
-            const balanceMet = userBalance >= minBalance;
-            conditionsContainer.innerHTML = `
-                <p class="flex justify-between">
-                    <span>ন্যূনতম রেফারেল:</span>
-                    <span class="${referralsMet ? 'text-green-600' : 'text-red-600'} font-bold">${userReferrals} / ${minReferrals} ${referralsMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span>
-                </p>
-                <p class="flex justify-between">
-                    <span>ন্যূনতম ব্যালেন্স:</span>
-                    <span class="${balanceMet ? 'text-green-600' : 'text-red-600'} font-bold">৳${userBalance.toFixed(2)} / ৳${minBalance.toFixed(2)} ${balanceMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span>
-                </p>`;
-            
+            const userReferrals = userData.referrals || 0; const userBalance = userData.balance || 0; const minReferrals = appSettings.minReferrals || 0; const minBalance = appSettings.minBalance || 0; const referralsMet = userReferrals >= minReferrals; const balanceMet = userBalance >= minBalance;
+            conditionsContainer.innerHTML = `<p class="flex justify-between"><span>ন্যূনতম রেফারেল:</span><span class="${referralsMet ? 'text-green-600' : 'text-red-600'} font-bold">${userReferrals} / ${minReferrals} ${referralsMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span></p><p class="flex justify-between"><span>ন্যূনতম ব্যালেন্স:</span><span class="${balanceMet ? 'text-green-600' : 'text-red-600'} font-bold">৳${userBalance.toFixed(2)} / ৳${minBalance.toFixed(2)} ${balanceMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span></p>`;
             const today = new Date().toDateString();
-            if (userData.lastSpinDate !== today) {
-                db.collection('users').doc(currentUser.uid).update({ spinsUsed: 0, lastSpinDate: today });
-            }
+            if (userData.lastSpinDate !== today) { db.collection('users').doc(currentUser.uid).update({ spinsUsed: 0, lastSpinDate: today }); }
             const spinsUsed = userData.spinsUsed || 0;
             document.getElementById('spins-left').textContent = (appSettings.dailySpins || 3) - spinsUsed;
             document.getElementById('spin-wheel-btn').disabled = spinsUsed >= (appSettings.dailySpins || 3);
-            
             ['withdraw-btn-home', 'wallet-withdraw-btn'].forEach(id => document.getElementById(id).disabled = false);
-            
             updateTasksList();
             updateRecentActivities();
             loadWithdrawalHistory();
@@ -327,23 +249,14 @@
             container.innerHTML = '<p>লোড হচ্ছে...</p>';
             try {
                 const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).limit(5).get();
-                if(snapshot.empty) {
-                    container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>';
-                    return;
-                }
+                if(snapshot.empty) { container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>'; return; }
                 const activities = snapshot.docs.map(doc => doc.data());
                 activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 container.innerHTML = '';
-                activities.forEach(act => {
-                    container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`;
-                });
-            } catch (error) {
-                console.error("Error loading recent activities:", error);
-                container.innerHTML = '<p class="text-center text-red-500">কার্যক্রম লোড করা যায়নি।</p>';
-            }
+                activities.forEach(act => { container.innerHTML += `<div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">${act.title}</p><p class="text-sm">${new Date(act.timestamp).toLocaleString('bn-BD')}</p></div><p class="text-green-500 font-bold">+৳${act.amount.toFixed(2)}</p></div>`; });
+            } catch (error) { console.error("Error loading recent activities:", error); container.innerHTML = '<p class="text-center text-red-500">কার্যক্রম লোড করা যায়নি।</p>'; }
         }
         
-        // --- Other functions (unchanged) ---
         async function initializeAdNetworks(collectionName) { const ref = db.collection(collectionName); const snap = await ref.limit(1).get(); if (snap.empty) { const batch = db.batch(); batch.set(ref.doc('monetag'), { name: 'Monetag', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('gigapub'), { name: 'Gigapub', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('adexora'), { name: 'Adexora', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); await batch.commit(); } }
         async function loadAdScriptsAndSettings(collectionName) { const networksSnapshot = await db.collection(collectionName).get(); const groupedAds = {}; networksSnapshot.forEach(doc => { const network = doc.data(); if (network.isActive && network.zones) { groupedAds[doc.id] = []; network.zones.forEach(zone => { if (zone.isActive && zone.id && zone.id.toUpperCase() !== 'YOUR_ID' && zone.id.toUpperCase() !== 'NEW_ZONE_ID') { const adData = { type: doc.id, zoneId: zone.id }; groupedAds[doc.id].push(adData); const scriptId = `ad-sdk-${doc.id}-${zone.id}`; if (!document.getElementById(scriptId)) { const script = document.createElement('script'); script.id = scriptId; if (doc.id === 'monetag') { script.src = `//libtl.com/sdk.js`; script.setAttribute('data-zone', zone.id); script.setAttribute('data-sdk', `show_${zone.id}`); } else if (doc.id === 'gigapub') { script.src = `https://ad.gigapub.tech/script?id=${zone.id}`; } else if (doc.id === 'adexora') { script.src = `https://adexora.com/cdn/ads.js?id=${zone.id}`; } document.head.appendChild(script); } } }); } }); const finalAdQueue = []; const monetagAds = groupedAds['monetag'] ? [...groupedAds['monetag']] : []; const otherNetworkNames = Object.keys(groupedAds).filter(name => name !== 'monetag'); const otherAdsGrouped = {}; otherNetworkNames.forEach(name => { otherAdsGrouped[name] = groupedAds[name]; }); if (monetagAds.length > 0) { finalAdQueue.push(monetagAds.shift()); } const interleavedRest = []; const maxLength = Math.max(0, ...Object.values(otherAdsGrouped).map(arr => arr.length), monetagAds.length); for (let i = 0; i < maxLength; i++) { if(monetagAds[i]) interleavedRest.push(monetagAds[i]); for (const name of otherNetworkNames) { if (otherAdsGrouped[name][i]) { interleavedRest.push(otherAdsGrouped[name][i]); } } } finalAdQueue.push(...interleavedRest); return { ads: finalAdQueue }; }
         async function showMandatoryAdAfterAction(adQueue) { return new Promise(async (resolve, reject) => { if (!adQueue || adQueue.length === 0) { return resolve(); } const waitForSdk = (ad, timeout = 7000) => new Promise((resolveSdk, rejectSdk) => { const getRunner = () => { if (ad.type === 'monetag') return window[`show_${ad.zoneId}`]; if (ad.type === 'adexora') return window.showAdexora; if (ad.type === 'gigapub') return window.showGiga; return null; }; if (typeof getRunner() === 'function') return resolveSdk(getRunner()); const start = Date.now(); const interval = setInterval(() => { const runnerNow = getRunner(); if (typeof runnerNow === 'function') { clearInterval(interval); resolveSdk(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); rejectSdk(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); try { for (const ad of adQueue) { const adRunner = await waitForSdk(ad); const result = adRunner(); if (result && typeof result.then === 'function') { await result; } } resolve(); } catch (error) { console.error('Ad error:', error); reject(error); } }); }
@@ -353,7 +266,32 @@
             document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
             document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("আপনার পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।\n\nঅনুগ্রহ করে আপনার ইমেইলের ইনবক্স চেক করুন। যদি ইনবক্সে ইমেইলটি খুঁজে না পান, তবে স্প্যাম (Spam) বা জাঙ্ক (Junk) ফোল্ডার চেক করতে ভুলবেন না।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); console.error("Password Reset Error:", error); } } });
             document.getElementById('login-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value); } catch (err) { alert('লগ ইন ব্যর্থ: ' + err.message); }});
-            document.getElementById('register-form-element').addEventListener('submit', async (e) => { e.preventDefault(); try { const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, document.getElementById('register-password').value); await cred.user.updateProfile({ displayName: document.getElementById('register-name').value }); } catch (err) { alert('রেজিস্ট্রেশন ব্যর্থ: ' + err.message); }});
+            
+            document.getElementById('register-form-element').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+                if (password !== confirmPassword) { alert("পাসওয়ার্ড দুটি মেলেনি। অনুগ্রহ করে আবার চেষ্টা করুন।"); return; }
+                try {
+                    const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, password);
+                    await cred.user.updateProfile({ displayName: document.getElementById('register-name').value });
+                    // initializeUserData will now be called inside onAuthStateChanged to ensure settings are loaded
+                } catch (err) { alert('রেজিস্ট্রেশন ব্যর্থ: ' + err.message); }
+            });
+
+            document.getElementById('save-profile-btn').addEventListener('click', async () => {
+                const newName = document.getElementById('profile-name-edit').value;
+                const newPhone = document.getElementById('profile-phone-edit').value;
+                if (!newName) { alert("নাম খালি রাখা যাবে না।"); return; }
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({ name: newName, phone: newPhone });
+                    alert("আপনার প্রোফাইল সফলভাবে আপডেট হয়েছে!");
+                } catch (error) {
+                    alert("প্রোফাইল আপডেট করতে একটি সমস্যা হয়েছে।");
+                    console.error("Profile update error:", error);
+                }
+            });
+
             const sections = document.querySelectorAll('.content-section'), navItems = document.querySelectorAll('.nav-item'), navButtons = document.querySelectorAll('.nav-btn');
             function navigateTo(sectionId) { sections.forEach(s => s.classList.remove('active')); document.getElementById(sectionId)?.classList.add('active'); navItems.forEach(n => n.classList.toggle('active', n.dataset.section === sectionId)); }
             navItems.forEach(item => item.addEventListener('click', (e) => { e.preventDefault(); navigateTo(item.dataset.section); }));
