@@ -114,18 +114,7 @@
 
         const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').classList.add('hidden'); };
         const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').classList.remove('hidden'); };
-        const switchToRegister = () => {
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('register-form').classList.remove('hidden');
-            const refCode = sessionStorage.getItem('referralCode');
-            const refWrapper = document.getElementById('referral-code-wrapper');
-            if (refCode) {
-                document.getElementById('register-referral-code').value = refCode;
-                refWrapper.classList.remove('hidden');
-            } else {
-                refWrapper.classList.add('hidden');
-            }
-        };
+        const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); const refCode = sessionStorage.getItem('referralCode'); const refWrapper = document.getElementById('referral-code-wrapper'); if (refCode) { document.getElementById('register-referral-code').value = refCode; refWrapper.classList.remove('hidden'); } else { refWrapper.classList.add('hidden'); } };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
         async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
@@ -136,13 +125,10 @@
             const userRef = db.collection('users').doc(user.uid);
             const userDoc = await userRef.get();
             if (userDoc.exists) return userDoc.data();
-
             const ref = sessionStorage.getItem('referralCode') || null;
             const phone = sessionStorage.getItem('registrationPhone') || '';
-
             const newUserData = { uid: user.uid, email: user.email, name: user.displayName, phone: phone, balance: 0, todayEarnings: 0, totalEarnings: 0, referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, joinDate: new Date().toISOString(), referredBy: ref, isBanned: false };
             await userRef.set(newUserData);
-
             if (ref && appSettings.referralBonus > 0) {
                 const referrerRef = db.collection('users').doc(ref);
                 const referralBonus = appSettings.referralBonus;
@@ -151,7 +137,6 @@
                     await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref);
                 } catch (error) { console.error("Error giving referral bonus:", error); }
             }
-            
             sessionStorage.removeItem('referralCode');
             sessionStorage.removeItem('registrationPhone');
             return newUserData;
