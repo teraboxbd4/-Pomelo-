@@ -27,11 +27,13 @@
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* *** NEW LOADER STYLES *** */
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #87CEEB, #98FB98); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
-        .loader-icon { font-size: 4rem; color: #fff; animation: spin 2s linear infinite, pulse 2.5s ease-in-out infinite; }
+        .loader-spinner { border: 5px solid rgba(255, 255, 255, 0.3); border-top: 5px solid #ffffff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         .loader-text { margin-top: 20px; color: #fff; font-size: 1.2rem; font-weight: 500; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
         .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; display: flex; justify-content: center; align-items: center; }
         .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background: linear-gradient(160deg, #ff7675, #d63031); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
         .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
@@ -45,29 +47,8 @@
         .modal-content { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255, 255, 255, 0.3); }
         .profile-pic-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
         .profile-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
-        /* *** MODIFIED STYLES FOR SUPPORT FAB *** */
-        .support-fab {
-            position: fixed;
-            bottom: 85px; /* Slightly raised position */
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background-color: #00CED1;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 999;
-            transition: transform 0.4s ease-in-out; /* Smooth transition for movement */
-        }
-        .support-fab.hidden {
-            transform: translateX(100px); /* Move it off-screen to the right */
-        }
+        .support-fab { position: fixed; bottom: 85px; right: 20px; width: 50px; height: 50px; background-color: #00CED1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 999; transition: transform 0.4s ease-in-out; }
+        .support-fab.hidden { transform: translateX(100px); }
         
         #support-links-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; }
         .support-link-button { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; background: rgba(255, 255, 255, 0.4); border-radius: 16px; text-decoration: none; color: #1F2937; border: 1px solid rgba(255, 255, 255, 0.3); transition: background 0.3s ease; }
@@ -75,12 +56,25 @@
         .support-link-button i { font-size: 28px; margin-bottom: 8px; color: #00CED1; }
         .support-link-button span { font-weight: 500; }
 
+        /* *** NEW STYLES FOR WELCOME MODAL *** */
+        #welcome-modal .modal-content { background: #fff; color: #333; }
+        #welcome-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
+        #welcome-modal-header h2 { font-size: 1.5rem; font-weight: 700; }
+        #welcome-modal-header .close-btn { font-size: 1.5rem; cursor: pointer; color: #999; }
+        #welcome-modal-body { line-height: 1.6; }
+        #welcome-modal-body ul { list-style: none; padding: 0; margin: 16px 0; }
+        #welcome-modal-body ul li { margin-bottom: 10px; display: flex; align-items: center; }
+        #welcome-modal-body ul li i { margin-right: 10px; color: #00CED1; }
+        #understand-welcome-btn { background-color: #007BFF; color: white; width: 100%; border: none; padding: 12px; border-radius: 12px; font-size: 1rem; font-weight: bold; margin-top: 16px; }
     </style>
 </head>
 <body>
-    <div id="loader"><i class="fas fa-lemon loader-icon"></i><p class="loader-text">লোড হচ্ছে...</p></div>
+    <div id="loader">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">লোড হচ্ছে...</p>
+    </div>
 
-    <div id="auth-section" class="flex justify-content-center items-center min-h-screen p-5" style="display: none;">
+    <div id="auth-section" class="flex justify-center items-center min-h-screen p-5" style="display: none;">
         <div class="glass-card w-full max-w-md p-8">
             <div id="login-form">
                 <h2 class="text-2xl font-bold mb-6 text-center">লগ ইন করুন</h2>
@@ -113,7 +107,7 @@
             <div class="text-right"><p id="header-user-name" class="font-semibold"></p><p class="text-sm">ব্যালেন্স: ৳<span id="header-balance">0.00</span></p></div>
         </header>
         <main class="p-4">
-            <div class="pb-24"> <!-- Padding bottom to ensure content isn't hidden by nav bar -->
+            <div class="pb-24"> 
                 <section id="home" class="content-section active">
                     <div class="glass-card p-6 mb-6 text-center"><h2 class="text-lg">আপনার বর্তমান ব্যালেন্স</h2><p class="text-5xl font-bold">৳<span id="wallet-balance">0.00</span></p><div class="mt-4 flex justify-around text-sm"><div><p>আজকের আয়</p><p class="font-bold">৳<span id="today-earnings">0.00</span></p></div><div><p>রেফারেল</p><p class="font-bold"><span id="referral-count">0</span> জন</p></div></div><button id="withdraw-btn-home" class="btn-primary mt-6 w-full"><i class="fas fa-money-bill-wave mr-2"></i> টাকা তুলুন</button></div>
                     <div class="grid grid-cols-2 gap-4 mb-6"><button id="watch-ad-btn" class="glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-video text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">বিজ্ঞাপন দেখুন</span><span id="watch-ad-notice" class="text-xs mt-1"></span></button><button data-target="tasks" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-tasks text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">টাস্ক করুন</span><span id="do-task-notice" class="text-xs mt-1"></span></button><button data-target="spin" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-dharmachakra text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">স্পিন করুন</span><span id="spin-wheel-notice" class="text-xs mt-1"></span></button><button data-target="profile" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-user-plus text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">রেফার করুন</span><span id="referral-notice" class="text-xs mt-1"></span></button></div>
@@ -159,6 +153,20 @@
     <div id="support-fab" class="support-fab"><i class="fas fa-headset"></i></div>
     <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
     <div id="support-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2><div id="support-links-container"></div><button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button></div></div>
+    
+    <!-- *** NEW WELCOME MODAL HTML *** -->
+    <div id="welcome-modal" class="modal">
+        <div class="modal-content">
+            <div id="welcome-modal-header">
+                <h2 id="welcome-modal-title">স্বাগতম! 🔥</h2>
+                <span class="close-btn" id="close-welcome-modal">&times;</span>
+            </div>
+            <div id="welcome-modal-body">
+                <!-- Content will be injected by JavaScript -->
+            </div>
+            <button id="understand-welcome-btn">বুঝেছি</button>
+        </div>
+    </div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyBowdaBVkAZa7OLr0wmJxjn9JqSlsy7l5o", authDomain: "pomelo-50690.firebaseapp.com", projectId: "pomelo-50690", storageBucket: "pomelo-50690.firebasestorage.app", messagingSenderId: "687340787607", appId: "1:687340787607:web:5c2fe2d6d0ff09c6c956d2" };
@@ -172,11 +180,25 @@
         const showLoader = () => loader.style.display = 'flex';
         const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); };
         const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').style.display = 'none'; hideLoader(); };
-        const showMainApp = () => { document.getElementById('auth-section').style.display = 'none'; document.getElementById('main-app').style.display = 'flex'; hideLoader(); };
+        const showMainApp = () => {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            hideLoader();
+
+            // *** NEW: Show welcome modal logic ***
+            if (!sessionStorage.getItem('welcomeShown')) {
+                const welcomeNoticeContent = appSettings.welcomeNotice;
+                if (welcomeNoticeContent) {
+                    document.getElementById('welcome-modal-body').innerHTML = welcomeNoticeContent;
+                    document.getElementById('welcome-modal').style.display = 'flex';
+                }
+                sessionStorage.setItem('welcomeShown', 'true');
+            }
+        };
         const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
-        async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: 'উত্তোলনের জন্য আপনার অ্যাকাউন্টে ন্যূনতম ১০টি রেফারেল এবং ৳১০০০ ব্যালেন্স থাকতে হবে.' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
+        async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: '', welcomeNotice: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
         function populateSupportModal() { const container = document.getElementById('support-links-container'); container.innerHTML = ''; appSettings.supportLinks.forEach(link => { if(link.url) { container.innerHTML += `<a href="${link.url}" target="_blank" class="support-link-button"><i class="${link.icon || 'fas fa-question-circle'}"></i><span>${link.name || 'Support'}</span></a>`; } }); }
         function generateWheelSections() { const wheel = document.getElementById('wheel'); if (!wheel) return; wheel.innerHTML = ''; const colors = ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c', '#34495e']; const angle = 360 / (spinPrizes.length || 8); spinPrizes.forEach((prize, index) => { const section = document.createElement('div'); section.className = 'wheel-section'; section.style.background = colors[index % colors.length]; section.style.transform = `rotate(${index * angle}deg)`; section.innerHTML = `<span style="transform: rotate(${angle / 2}deg) translateY(-100%)">${'৳' + prize}</span>`; wheel.appendChild(section); }); }
         
@@ -389,21 +411,24 @@
             document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('referral-link').value).then(() => alert('রেফারেল লিঙ্ক কপি করা হয়েছে!')));
             document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
             
+            // Modals Close Logic
+            const welcomeModal = document.getElementById('welcome-modal');
+            document.getElementById('close-welcome-modal').addEventListener('click', () => welcomeModal.style.display = 'none');
+            document.getElementById('understand-welcome-btn').addEventListener('click', () => welcomeModal.style.display = 'none');
+
             // Support Modal & FAB Scroll Logic
             const supportModal = document.getElementById('support-modal');
             const supportFab = document.getElementById('support-fab');
             const mainContentArea = document.querySelector('main'); 
             let scrollTimeout;
-
             supportFab.addEventListener('click', () => supportModal.style.display = 'flex');
             document.getElementById('close-support-modal').addEventListener('click', () => supportModal.style.display = 'none');
 
-            // *** MODIFIED SCROLL LISTENER ***
             mainContentArea.addEventListener('scroll', () => {
-                supportFab.classList.add('hidden'); // Add class to trigger the smooth transform
+                supportFab.classList.add('hidden');
                 clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => {
-                    supportFab.classList.remove('hidden'); // Remove class to bring it back
+                    supportFab.classList.remove('hidden');
                 }, 300);
             });
         });
