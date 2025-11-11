@@ -17,7 +17,7 @@
         html { height: 100%; }
         body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; height: 100%; overflow: hidden; }
         .app-wrapper { height: 100vh; display: flex; flex-direction: column; }
-        main { flex-grow: 1; overflow-y: auto; padding: 1rem; }
+        main { flex-grow: 1; overflow-y: auto; padding: 0.75rem; }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
         .btn-primary { background: linear-gradient(135deg, #00CED1, #20B2AA); color: white; border-radius: 16px; padding: 14px 24px; font-weight: bold; transition: all 0.3s ease; border: none; }
         .btn-primary:disabled { background: #999; opacity: 0.7; cursor: not-allowed; }
@@ -34,14 +34,17 @@
         .loader-text { margin-top: 20px; color: #fff; font-size: 1.2rem; font-weight: 500; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .wheel-container { position: relative; width: 300px; height: 300px; margin: 15px auto; display: flex; justify-content: center; align-items: center; }
-        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background: linear-gradient(160deg, #ff7675, #d63031); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
-        .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
-        .wheel-inner-border { width: 100%; height: 100%; background: #fff; border-radius: 50%; padding: 5px; position: relative; }
+        /* FINAL SPIN PAGE STYLES */
+        #spin .glass-card { display: flex; flex-direction: column; align-items: center; }
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 15px auto; }
+        .wheel-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 35px; height: 45px; background: linear-gradient(160deg, #ff7675, #d63031); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
+        .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.2), inset 0 0 8px rgba(0,0,0,0.3); }
+        .wheel-inner-border { width: 100%; height: 100%; background: #fff; border-radius: 50%; padding: 4px; position: relative; }
         .wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; background: #bdc3c7; transition: transform 6s cubic-bezier(0.1, 0.7, 0.0, 1); }
         .wheel-section { position: absolute; width: 50%; height: 50%; transform-origin: bottom right; clip-path: polygon(0 0, 100% 0, 100% 100%); display: flex; align-items: center; justify-content: center; }
-        .wheel-section span { display: block; color: white; font-weight: 700; font-size: 18px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: radial-gradient(circle, #ffd700, #f0c000); border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 15; }
+        .wheel-section span { display: block; color: white; font-weight: 700; font-size: 16px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
+        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: radial-gradient(circle, #ffd700, #f0c000); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.3); z-index: 15; }
+        
         input, select { background: rgba(255, 255, 255, 0.7) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255, 255, 255, 0.3); }
@@ -69,35 +72,12 @@
         #welcome-modal-body .notice-table .description { width: 40%; padding-left: 5px; text-align: left; }
         #welcome-modal-body .notice-table .amount { width: 25%; font-weight: bold; text-align: right; white-space: nowrap; }
 
-        /* Task Card Styles */
-        #tasks-list .task-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-        }
-        #tasks-list .task-card-icon {
-            font-size: 28px;
-            color: #00CED1;
-            margin-right: 12px;
-        }
-        #tasks-list .task-card-details {
-            flex-grow: 1;
-        }
-        #tasks-list .task-card-details p {
-            margin: 0;
-            line-height: 1.3;
-        }
-        #tasks-list .task-card-details .task-reward {
-            font-size: 0.8rem;
-        }
-        #tasks-list .task-card-btn {
-            flex-shrink: 0;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            border-radius: 12px;
-        }
-
+        #tasks-list .task-card { display: flex; align-items: center; justify-content: space-between; padding: 12px; }
+        #tasks-list .task-card-icon { font-size: 28px; color: #00CED1; margin-right: 12px; }
+        #tasks-list .task-card-details { flex-grow: 1; }
+        #tasks-list .task-card-details p { margin: 0; line-height: 1.3; }
+        #tasks-list .task-card-details .task-reward { font-size: 0.8rem; }
+        #tasks-list .task-card-btn { flex-shrink: 0; padding: 8px 16px; font-size: 0.9rem; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -359,7 +339,7 @@
 
         async function updateTasksList() {
             const list = document.getElementById('tasks-list');
-            list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>';
+            list.innerHTML = '<p class="text-center">টাস্ক লোড হচ্ছে...</p>';
             try {
                 const snapshot = await db.collection('tasks').where('status', '==', 'active').get();
                 if (snapshot.empty) {
@@ -378,7 +358,7 @@
                     if (isCompleted) {
                         buttonHTML = `<button class="task-card-btn btn-primary" disabled>সম্পন্ন</button>`;
                     } else if (isReadyToClaim) {
-                        buttonHTML = `<button class="claim-task-btn task-card-btn btn-primary" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`;
+                        buttonHTML = `<button class="claim-task-btn task-card-btn btn-primary bg-green-500" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`;
                     } else {
                         buttonHTML = `<button class="do-task-btn task-card-btn btn-primary" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`;
                     }
@@ -394,14 +374,14 @@
                         </div>`;
                 });
             } catch (e) {
-                list.innerHTML = '<p class="text-red-500">টাস্ক লোড করা যায়নি।</p>';
+                list.innerHTML = '<p class="text-red-500 text-center">টাস্ক লোড করা যায়নি।</p>';
             }
         }
         
         async function updateRecentActivities() {
             const container = document.getElementById('recent-activity');
             if (!currentUser) { container.innerHTML = ''; return; }
-            container.innerHTML = '<p>লোড হচ্ছে...</p>';
+            container.innerHTML = '<p class="text-center">লোড হচ্ছে...</p>';
             try {
                 const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).limit(5).get();
                 if (snapshot.empty) { container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>'; return; }
