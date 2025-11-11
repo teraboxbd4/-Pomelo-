@@ -28,7 +28,6 @@
         .content-section.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* *** NEW LOADER STYLES *** */
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #87CEEB, #98FB98); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
         .loader-spinner { border: 5px solid rgba(255, 255, 255, 0.3); border-top: 5px solid #ffffff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         .loader-text { margin-top: 20px; color: #fff; font-size: 1.2rem; font-weight: 500; }
@@ -56,16 +55,17 @@
         .support-link-button i { font-size: 28px; margin-bottom: 8px; color: #00CED1; }
         .support-link-button span { font-weight: 500; }
 
-        /* *** NEW STYLES FOR WELCOME MODAL *** */
         #welcome-modal .modal-content { background: #fff; color: #333; }
         #welcome-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
         #welcome-modal-header h2 { font-size: 1.5rem; font-weight: 700; }
         #welcome-modal-header .close-btn { font-size: 1.5rem; cursor: pointer; color: #999; }
         #welcome-modal-body { line-height: 1.6; }
-        #welcome-modal-body ul { list-style: none; padding: 0; margin: 16px 0; }
-        #welcome-modal-body ul li { margin-bottom: 10px; display: flex; align-items: center; }
-        #welcome-modal-body ul li i { margin-right: 10px; color: #00CED1; }
         #understand-welcome-btn { background-color: #007BFF; color: white; width: 100%; border: none; padding: 12px; border-radius: 12px; font-size: 1rem; font-weight: bold; margin-top: 16px; }
+        #welcome-modal-body .notice-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        #welcome-modal-body .notice-table td { padding: 8px 4px; vertical-align: middle; }
+        #welcome-modal-body .notice-table td:nth-child(1) { width: 20%; font-weight: bold; white-space: nowrap; }
+        #welcome-modal-body .notice-table td:nth-child(2) { width: 55%; }
+        #welcome-modal-body .notice-table td:nth-child(3) { width: 25%; font-weight: bold; text-align: right; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -154,16 +154,13 @@
     <div id="withdraw-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-4 text-center">টাকা উত্তোলন করুন</h2><form id="withdraw-form"><div class="mb-4"><label class="block mb-2">পেমেন্ট মেথড</label><select id="withdraw-method" class="w-full p-3"><option>bKash</option><option>Nagad</option><option>Rocket</option></select></div><div class="mb-4"><label class="block mb-2">মোবাইল নম্বর</label><input type="text" id="withdraw-number" class="w-full p-3" required></div><div class="mb-4"><label class="block mb-2">পরিমাণ (৳)</label><input type="number" step="0.01" id="withdraw-amount" class="w-full p-3" placeholder="টাকার পরিমাণ লিখুন" required></div><div class="flex justify-between mt-6"><button type="button" id="cancel-withdraw" class="px-4 py-2 bg-gray-500 text-gray-800 rounded-lg">বাতিল</button><button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg">জমা দিন</button></div></form></div></div>
     <div id="support-modal" class="modal"><div class="modal-content"><h2 class="text-xl font-bold mb-6 text-center">সাপোর্ট</h2><div id="support-links-container"></div><button id="close-support-modal" class="w-full mt-4 py-2 bg-gray-600 text-white rounded-lg">বন্ধ করুন</button></div></div>
     
-    <!-- *** NEW WELCOME MODAL HTML *** -->
     <div id="welcome-modal" class="modal">
         <div class="modal-content">
             <div id="welcome-modal-header">
-                <h2 id="welcome-modal-title">স্বাগতম! 🔥</h2>
+                <h2>স্বাগতম! 🔥</h2>
                 <span class="close-btn" id="close-welcome-modal">&times;</span>
             </div>
-            <div id="welcome-modal-body">
-                <!-- Content will be injected by JavaScript -->
-            </div>
+            <div id="welcome-modal-body"></div>
             <button id="understand-welcome-btn">বুঝেছি</button>
         </div>
     </div>
@@ -185,11 +182,19 @@
             document.getElementById('main-app').style.display = 'flex';
             hideLoader();
 
-            // *** NEW: Show welcome modal logic ***
             if (!sessionStorage.getItem('welcomeShown')) {
                 const welcomeNoticeContent = appSettings.welcomeNotice;
                 if (welcomeNoticeContent) {
                     document.getElementById('welcome-modal-body').innerHTML = welcomeNoticeContent;
+                    
+                    const joinBonusSpan = document.querySelector('#welcome-modal-body #welcome-join-bonus');
+                    const referBonusSpan = document.querySelector('#welcome-modal-body #welcome-refer-bonus');
+                    const adRewardSpan = document.querySelector('#welcome-modal-body #welcome-ad-reward');
+                    
+                    if(joinBonusSpan) joinBonusSpan.textContent = appSettings.joiningBonus || 0;
+                    if(referBonusSpan) referBonusSpan.textContent = appSettings.referralBonus || 0;
+                    if(adRewardSpan) adRewardSpan.textContent = appSettings.watchAdReward || 0;
+
                     document.getElementById('welcome-modal').style.display = 'flex';
                 }
                 sessionStorage.setItem('welcomeShown', 'true');
@@ -198,7 +203,7 @@
         const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
         const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
-        async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: '', welcomeNotice: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
+        async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, joiningBonus: 10, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: '', welcomeNotice: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
         function populateSupportModal() { const container = document.getElementById('support-links-container'); container.innerHTML = ''; appSettings.supportLinks.forEach(link => { if(link.url) { container.innerHTML += `<a href="${link.url}" target="_blank" class="support-link-button"><i class="${link.icon || 'fas fa-question-circle'}"></i><span>${link.name || 'Support'}</span></a>`; } }); }
         function generateWheelSections() { const wheel = document.getElementById('wheel'); if (!wheel) return; wheel.innerHTML = ''; const colors = ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c', '#34495e']; const angle = 360 / (spinPrizes.length || 8); spinPrizes.forEach((prize, index) => { const section = document.createElement('div'); section.className = 'wheel-section'; section.style.background = colors[index % colors.length]; section.style.transform = `rotate(${index * angle}deg)`; section.innerHTML = `<span style="transform: rotate(${angle / 2}deg) translateY(-100%)">${'৳' + prize}</span>`; wheel.appendChild(section); }); }
         
@@ -212,26 +217,39 @@
             try {
                 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) { 
                     const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                    if(tgUser && tgUser.photo_url) {
-                        photoUrl = tgUser.photo_url;
-                    }
+                    if(tgUser && tgUser.photo_url) { photoUrl = tgUser.photo_url; }
                     const initData = new URLSearchParams(window.Telegram.WebApp.initData); 
-                    if (initData.has('start_param')) { 
-                        ref = initData.get('start_param'); 
-                    }
+                    if (initData.has('start_param')) { ref = initData.get('start_param'); }
                 } 
             } catch(e) { console.error("Could not read Telegram data on initialization:", e); }
             
             if (!ref) { ref = new URLSearchParams(window.location.search).get('ref'); }
             
+            const joiningBonus = ref ? (appSettings.joiningBonus || 0) : 0;
             const newUserData = {
                 uid: user.uid, email: user.email, name: document.getElementById('register-name').value || user.displayName || 'ব্যবহারকারী',
-                phone: document.getElementById('register-phone').value || '', photo_url: photoUrl, balance: 0, todayEarnings: 0, totalEarnings: 0, 
+                phone: document.getElementById('register-phone').value || '', photo_url: photoUrl, balance: joiningBonus, todayEarnings: 0, totalEarnings: joiningBonus, 
                 referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, 
                 joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false
             };
             await userRef.set(newUserData);
-            if (ref) { const referrerRef = db.collection('users').doc(ref); const referralBonus = appSettings.referralBonus || 5; await db.runTransaction(async (t) => { const doc = await t.get(referrerRef); if (doc.exists) { t.update(referrerRef, { balance: firebase.firestore.FieldValue.increment(referralBonus), referralEarnings: firebase.firestore.FieldValue.increment(referralBonus), referrals: firebase.firestore.FieldValue.increment(1) }); } }); await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন।`, ref); }
+
+            if (ref) {
+                const referrerRef = db.collection('users').doc(ref);
+                const referralBonus = appSettings.referralBonus || 0;
+                await db.runTransaction(async (transaction) => {
+                    const doc = await transaction.get(referrerRef);
+                    if (doc.exists) {
+                        transaction.update(referrerRef, {
+                            balance: firebase.firestore.FieldValue.increment(referralBonus),
+                            referralEarnings: firebase.firestore.FieldValue.increment(referralBonus),
+                            referrals: firebase.firestore.FieldValue.increment(1)
+                        });
+                    }
+                });
+                if (joiningBonus > 0) await addActivity('জয়েনিং বোনাস', joiningBonus);
+                if (referralBonus > 0) await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন এবং ৳${referralBonus} বোনাস পেয়েছেন।`, ref);
+            }
             return newUserData;
         }
         
@@ -466,6 +484,7 @@
                 listenToUserData(user.uid);
             } else {
                 currentUser = null; userData = null; if (userListener) userListener();
+                sessionStorage.removeItem('welcomeShown');
                 sessionStorage.removeItem('tasksToClaim');
                 showAuthSection();
             }
