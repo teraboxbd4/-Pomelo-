@@ -14,13 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans Bengali', sans-serif; }
-        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; min-height: 100vh; overflow: hidden; }
+        html { height: 100%; }
+        body { background: linear-gradient(135deg, #87CEEB, #98FB98); color: #1F2937; height: 100%; overflow: hidden; }
         .app-wrapper { height: 100vh; display: flex; flex-direction: column; }
-        main { flex-grow: 1; overflow-y: auto; }
+        main { flex-grow: 1; overflow-y: auto; padding: 1rem; }
         .glass-card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
         .btn-primary { background: linear-gradient(135deg, #00CED1, #20B2AA); color: white; border-radius: 16px; padding: 14px 24px; font-weight: bold; transition: all 0.3s ease; border: none; }
         .btn-primary:disabled { background: #999; opacity: 0.7; cursor: not-allowed; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.3); display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.3); display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1); flex-shrink: 0; }
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #64748b; transition: all 0.3s ease; padding: 8px 12px; border-radius: 16px; cursor: pointer; }
         .nav-item.active { color: #00CED1; background: rgba(0, 206, 209, 0.1); }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
@@ -33,14 +34,14 @@
         .loader-text { margin-top: 20px; color: #fff; font-size: 1.2rem; font-weight: 500; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; display: flex; justify-content: center; align-items: center; }
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: 15px auto; display: flex; justify-content: center; align-items: center; }
         .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 40px; height: 50px; background: linear-gradient(160deg, #ff7675, #d63031); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.3)); }
         .wheel-outer-border { width: 100%; height: 100%; background: linear-gradient(135deg, #f8a5a5, #ff6b6b); border-radius: 50%; padding: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3); }
         .wheel-inner-border { width: 100%; height: 100%; background: #fff; border-radius: 50%; padding: 5px; position: relative; }
         .wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; background: #bdc3c7; transition: transform 6s cubic-bezier(0.1, 0.7, 0.0, 1); }
         .wheel-section { position: absolute; width: 50%; height: 50%; transform-origin: bottom right; clip-path: polygon(0 0, 100% 0, 100% 100%); display: flex; align-items: center; justify-content: center; }
-        .wheel-section span { display: block; color: white; font-weight: 700; font-size: 20px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: radial-gradient(circle, #ffd700, #f0c000); border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 15; }
+        .wheel-section span { display: block; color: white; font-weight: 700; font-size: 18px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5); }
+        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: radial-gradient(circle, #ffd700, #f0c000); border-radius: 50%; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 15; }
         input, select { background: rgba(255, 255, 255, 0.7) !important; border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255, 255, 255, 0.3); }
@@ -55,19 +56,48 @@
         .support-link-button i { font-size: 28px; margin-bottom: 8px; color: #00CED1; }
         .support-link-button span { font-weight: 500; }
 
-        /* *** FINAL, UPDATED STYLES FOR WELCOME MODAL *** */
-        #welcome-modal .modal-content { background: #fff; color: #333; }
-        #welcome-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
-        #welcome-modal-header h2 { font-size: 1.4rem; font-weight: 700; }
+        #welcome-modal .modal-content { padding: 18px; }
+        #welcome-modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; margin-bottom: 8px; }
+        #welcome-modal-header h2 { font-size: 1.2rem; font-weight: 700; }
         #welcome-modal-header .close-btn { font-size: 1.5rem; cursor: pointer; color: #999; }
-        #welcome-modal-body { line-height: 1.5; font-size: 13px; }
-        #welcome-modal-body p { margin-bottom: 10px; }
-        #understand-welcome-btn { background-color: #007BFF; color: white; width: 100%; border: none; padding: 12px; border-radius: 12px; font-size: 1rem; font-weight: bold; margin-top: 16px; }
-        #welcome-modal-body .notice-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        #welcome-modal-body .notice-table td { padding: 5px 2px; vertical-align: middle; line-height: 1.3; }
-        #welcome-modal-body .notice-table .icon-title { width: 32%; font-weight: bold; white-space: nowrap; }
-        #welcome-modal-body .notice-table .description { width: 48%; padding-left: 5px; }
-        #welcome-modal-body .notice-table .amount { width: 20%; font-weight: bold; text-align: right; white-space: nowrap; }
+        #welcome-modal-body { line-height: 1.4; font-size: 12px; text-align: center; }
+        #welcome-modal-body p { margin-bottom: 8px; }
+        #understand-welcome-btn { background-color: #007BFF; color: white; width: 100%; border: none; padding: 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; margin-top: 8px; }
+        #welcome-modal-body .notice-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        #welcome-modal-body .notice-table td { padding: 4px 2px; vertical-align: middle; line-height: 1.2; font-size: 12px; }
+        #welcome-modal-body .notice-table .icon-title { width: 35%; font-weight: bold; white-space: nowrap; }
+        #welcome-modal-body .notice-table .description { width: 40%; padding-left: 5px; text-align: left; }
+        #welcome-modal-body .notice-table .amount { width: 25%; font-weight: bold; text-align: right; white-space: nowrap; }
+
+        /* Task Card Styles */
+        #tasks-list .task-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+        }
+        #tasks-list .task-card-icon {
+            font-size: 28px;
+            color: #00CED1;
+            margin-right: 12px;
+        }
+        #tasks-list .task-card-details {
+            flex-grow: 1;
+        }
+        #tasks-list .task-card-details p {
+            margin: 0;
+            line-height: 1.3;
+        }
+        #tasks-list .task-card-details .task-reward {
+            font-size: 0.8rem;
+        }
+        #tasks-list .task-card-btn {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 12px;
+        }
+
     </style>
 </head>
 <body>
@@ -108,15 +138,15 @@
             <div><h1 class="text-2xl font-bold">Click2Cash</h1><p class="text-gray-600">আপনার আয়ের পথ</p></div>
             <div class="text-right"><p id="header-user-name" class="font-semibold"></p><p class="text-sm">ব্যালেন্স: ৳<span id="header-balance">0.00</span></p></div>
         </header>
-        <main class="p-4">
+        <main>
             <div class="pb-24"> 
                 <section id="home" class="content-section active">
                     <div class="glass-card p-6 mb-6 text-center"><h2 class="text-lg">আপনার বর্তমান ব্যালেন্স</h2><p class="text-5xl font-bold">৳<span id="wallet-balance">0.00</span></p><div class="mt-4 flex justify-around text-sm"><div><p>আজকের আয়</p><p class="font-bold">৳<span id="today-earnings">0.00</span></p></div><div><p>রেফারেল</p><p class="font-bold"><span id="referral-count">0</span> জন</p></div></div><button id="withdraw-btn-home" class="btn-primary mt-6 w-full"><i class="fas fa-money-bill-wave mr-2"></i> টাকা তুলুন</button></div>
                     <div class="grid grid-cols-2 gap-4 mb-6"><button id="watch-ad-btn" class="glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-video text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">বিজ্ঞাপন দেখুন</span><span id="watch-ad-notice" class="text-xs mt-1"></span></button><button data-target="tasks" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-tasks text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">টাস্ক করুন</span><span id="do-task-notice" class="text-xs mt-1"></span></button><button data-target="spin" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-dharmachakra text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">স্পিন করুন</span><span id="spin-wheel-notice" class="text-xs mt-1"></span></button><button data-target="profile" class="nav-btn glass-card p-4 flex flex-col items-center justify-center"><i class="fas fa-user-plus text-3xl mb-2 text-cyan-500"></i><span class="font-semibold">রেফার করুন</span><span id="referral-notice" class="text-xs mt-1"></span></button></div>
                     <div class="glass-card p-6"><h3 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-history mr-3 text-cyan-500"></i>সাম্প্রতিক কার্যক্রম</h3><div id="recent-activity" class="space-y-3"></div></div>
                 </section>
-                <section id="tasks" class="content-section"><div class="glass-card p-6"><h2 class="text-2xl font-bold mb-4"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-4"></div></div></section>
-                <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-6">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
+                <section id="tasks" class="content-section"><div class="glass-card p-4"><h2 class="text-2xl font-bold mb-4 text-center"><i class="fas fa-tasks mr-3 text-cyan-500"></i>ডেইলি টাস্ক</h2><div id="tasks-list" class="space-y-3"></div></div></section>
+                <section id="spin" class="content-section"><div class="glass-card p-6 text-center"><h2 class="text-2xl font-bold mb-2">স্পিন করে আয় করুন</h2><p class="mb-4">আপনার আজকের স্পিন: <span id="spins-left">3</span>/<span id="daily-spin-limit-text">3</span></p><div class="wheel-container"><div class="wheel-outer-border"><div class="wheel-inner-border"><div class="wheel" id="wheel"></div></div></div><div class="wheel-center"></div><div class="wheel-pointer"></div></div><button id="spin-wheel-btn" class="btn-primary w-full py-3 text-lg mt-4">স্পিন করুন</button></div></section>
                 <section id="wallet" class="content-section">
                     <div class="glass-card p-6"><div class="mb-6"><h3 class="text-xl font-bold mb-4">উত্তোলনের শর্তাবলী</h3><div id="withdrawal-conditions" class="space-y-2 p-4 bg-white/50 rounded-lg"></div></div><h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-3 text-cyan-500"></i>আমার ওয়ালেট</h2><div class="mb-4 p-4 bg-cyan-100 rounded-xl text-gray-800"><p>মোট ব্যালেন্স</p><p class="text-4xl font-bold my-2">৳<span id="wallet-total">0.00</span></p><p class="text-sm">ন্যূনতম উত্তোলন: ৳<span id="min-withdrawal-text">50.00</span></p></div><div id="wallet-notice" class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg"></div><div class="space-y-4 mb-6"><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">আজকের আয়</p></div><p class="text-xl font-bold text-green-500">৳<span id="wallet-today">0.00</span></p></div><div class="flex justify-between items-center p-3 bg-white/70 rounded-lg"><div><p class="font-semibold">রেফারেল আয়</p></div><p class="text-xl font-bold text-cyan-500">৳<span id="wallet-referral">0.00</span></p></div></div><button id="wallet-withdraw-btn" class="btn-primary w-full py-3 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> টাকা উত্তোলন করুন</button><div><h3 class="text-xl font-bold mb-4">উত্তোলনের হিস্টোরি</h3><div id="withdrawal-history" class="space-y-3"></div></div></div>
                 </section>
@@ -327,7 +357,46 @@
         const addTaskToClaim = (taskId) => { const tasks = getTasksToClaim(); if (!tasks.includes(taskId)) { tasks.push(taskId); sessionStorage.setItem('tasksToClaim', JSON.stringify(tasks)); } };
         const removeTaskFromClaim = (taskId) => { let tasks = getTasksToClaim(); tasks = tasks.filter(id => id !== taskId); sessionStorage.setItem('tasksToClaim', JSON.stringify(tasks)); };
 
-        async function updateTasksList() { const list = document.getElementById('tasks-list'); list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>'; try { const snapshot = await db.collection('tasks').where('status', '==', 'active').get(); if (snapshot.empty) { list.innerHTML = '<p>আজকের জন্য কোনো টাস্ক নেই।</p>'; return; } const tasksToClaim = getTasksToClaim(); list.innerHTML = ''; snapshot.forEach(doc => { const task = doc.data(); const taskId = doc.id; const taskKey = `${taskId}_${new Date().toDateString()}`; const isCompleted = (userData.tasksCompleted || []).includes(taskKey); const isReadyToClaim = tasksToClaim.includes(taskId); let buttonHTML = ''; if (isCompleted) { buttonHTML = `<button class="w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-gray-400" disabled>সম্পন্ন</button>`; } else if (isReadyToClaim) { buttonHTML = `<button class="claim-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-green-500 hover:bg-green-600" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`; } else { buttonHTML = `<button class="do-task-btn w-28 text-white px-4 py-2 rounded-lg text-sm font-bold bg-cyan-500 hover:bg-cyan-600" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`; } const imageOrIconHTML = task.imageUrl ? `<img src="${task.imageUrl}" class="w-12 h-12 rounded-lg object-cover mr-4 flex-shrink-0">` : `<i class="${task.icon || 'fas fa-tasks'} text-cyan-500 text-3xl mr-4 w-12 text-center flex-shrink-0"></i>`; list.innerHTML += `<div class="flex items-center justify-between p-4 bg-white/30 rounded-lg"><div class="flex items-center flex-grow">${imageOrIconHTML}<div><p class="font-semibold">${task.name}</p><p class="text-sm text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p></div></div><div class="flex-shrink-0 ml-2">${buttonHTML}</div></div>`; }); } catch(e){ list.innerHTML = '<p class="text-red-500">টাস্ক লোড করা যায়নি।</p>'; } }
+        async function updateTasksList() {
+            const list = document.getElementById('tasks-list');
+            list.innerHTML = '<p>টাস্ক লোড হচ্ছে...</p>';
+            try {
+                const snapshot = await db.collection('tasks').where('status', '==', 'active').get();
+                if (snapshot.empty) {
+                    list.innerHTML = '<p class="text-center">আজকের জন্য কোনো টাস্ক নেই।</p>';
+                    return;
+                }
+                const tasksToClaim = getTasksToClaim();
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const task = doc.data();
+                    const taskId = doc.id;
+                    const taskKey = `${taskId}_${new Date().toDateString()}`;
+                    const isCompleted = (userData.tasksCompleted || []).includes(taskKey);
+                    const isReadyToClaim = tasksToClaim.includes(taskId);
+                    let buttonHTML = '';
+                    if (isCompleted) {
+                        buttonHTML = `<button class="task-card-btn btn-primary" disabled>সম্পন্ন</button>`;
+                    } else if (isReadyToClaim) {
+                        buttonHTML = `<button class="claim-task-btn task-card-btn btn-primary" data-id="${taskId}" data-reward="${task.reward}">পুরস্কার নিন</button>`;
+                    } else {
+                        buttonHTML = `<button class="do-task-btn task-card-btn btn-primary" data-id="${taskId}" data-link="${task.link}">টাস্ক করুন</button>`;
+                    }
+                    const iconHTML = `<i class="${task.icon || 'fas fa-download'} task-card-icon"></i>`;
+                    list.innerHTML += `
+                        <div class="glass-card task-card">
+                            ${iconHTML}
+                            <div class="task-card-details">
+                                <p class="font-semibold">${task.name}</p>
+                                <p class="task-reward text-yellow-800 font-bold">পুরস্কার: ৳${task.reward.toFixed(2)}</p>
+                            </div>
+                            ${buttonHTML}
+                        </div>`;
+                });
+            } catch (e) {
+                list.innerHTML = '<p class="text-red-500">টাস্ক লোড করা যায়নি।</p>';
+            }
+        }
         
         async function updateRecentActivities() {
             const container = document.getElementById('recent-activity');
