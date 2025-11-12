@@ -86,33 +86,6 @@
         <p class="loader-text">লোড হচ্ছে...</p>
     </div>
 
-    <div id="auth-section" class="flex justify-center items-center min-h-screen p-5" style="display: none;">
-        <div class="glass-card w-full max-w-md p-8">
-            <div id="login-form">
-                <h2 class="text-2xl font-bold mb-6 text-center">লগ ইন করুন</h2>
-                <form id="login-form-element">
-                    <div class="mb-4"><label class="block mb-2">ইমেইল</label><input type="email" id="login-email" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="login-password" class="w-full p-3" required></div>
-                    <div class="text-right mb-6"><a href="#" id="forgot-password-link" class="text-sm text-cyan-600 hover:underline">পাসওয়ার্ড ভুলে গেছেন?</a></div>
-                    <button type="submit" class="btn-primary w-full py-3 mb-4">লগ ইন</button>
-                </form>
-                <p class="text-center">অ্যাকাউন্ট নেই? <a href="#" id="show-register" class="text-cyan-600 hover:underline">রেজিস্টার করুন</a></p>
-            </div>
-            <div id="register-form" class="hidden">
-                <h2 class="text-2xl font-bold mb-6 text-center">রেজিস্টার করুন</h2>
-                <form id="register-form-element">
-                    <div class="mb-4"><label class="block mb-2">পুরো নাম</label><input type="text" id="register-name" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">ইমেইল</label><input type="email" id="register-email" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">ফোন নম্বর</label><input type="tel" id="register-phone" class="w-full p-3" required></div>
-                    <div class="mb-4"><label class="block mb-2">পাসওয়ার্ড</label><input type="password" id="register-password" class="w-full p-3" required></div>
-                    <div class="mb-6"><label class="block mb-2">কনফার্ম পাসওয়ার্ড</label><input type="password" id="register-confirm-password" class="w-full p-3" required></div>
-                    <button type="submit" class="btn-primary w-full py-3 mb-4">রেজিস্টার</button>
-                </form>
-                <p class="text-center">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="#" id="show-login" class="text-cyan-600 hover:underline">লগ ইন করুন</a></p>
-            </div>
-        </div>
-    </div>
-
     <div id="main-app" class="hidden app-wrapper">
         <header class="p-4 flex justify-between items-center glass-card m-2 rounded-2xl flex-shrink-0">
             <div><h1 class="text-2xl font-bold">সবুজ মরিচ</h1><p class="text-gray-600">আপনার ইনকামের পথ</p></div>
@@ -145,8 +118,7 @@
                                     <input type="text" id="profile-name-input" class="w-full text-xl font-bold p-1 border rounded-md">
                                     <button id="save-name-btn" class="btn-primary py-1 px-3 mt-1 text-sm">সেভ করুন</button>
                                 </div>
-                                <p id="profile-email-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
-                                <p id="profile-phone-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
+                                <p id="profile-telegram-id-display" class="text-sm text-gray-700 mt-1 font-medium"></p>
                                 <p id="profile-join-date" class="text-xs text-gray-600 mt-1"></p>
                             </div>
                         </div>
@@ -188,9 +160,9 @@
         const loader = document.getElementById('loader');
         const showLoader = () => loader.style.display = 'flex';
         const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); };
-        const showAuthSection = () => { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('main-app').style.display = 'none'; hideLoader(); };
+        
         const showMainApp = () => {
-            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('main-app').style.display = 'flex';
             hideLoader();
 
@@ -212,67 +184,79 @@
                 sessionStorage.setItem('welcomeShown', 'true');
             }
         };
-        const switchToRegister = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); };
-        const switchToLogin = () => { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
         async function loadAppSettings() { const doc = await db.collection('app_settings').doc('config').get(); const defaults = { minWithdrawal: 50, joiningBonus: 10, referralBonus: 5, dailySpins: 3, watchAdReward: 5, spinPrizes: [3, 2, 5, 8, 10, 15, 20, 1], watchAdNotice: '৳5.00 আয় করুন', doTaskNotice: 'আয় করুন', spinWheelNotice: 'পুরস্কার জিতুন', referralNotice: '৳5.00 বোনাস পান', supportLinks: [], botUsername: '', appShortName: '', minReferrals: 10, minBalance: 1000, walletNotice: '', welcomeNotice: '' }; appSettings = doc.exists ? { ...defaults, ...doc.data() } : defaults; spinPrizes = appSettings.spinPrizes; generateWheelSections(); const supportBtn = document.getElementById('support-fab'); if (appSettings.supportLinks && appSettings.supportLinks.length > 0) { populateSupportModal(); supportBtn.style.display = 'flex'; } else { supportBtn.style.display = 'none'; } }
         function populateSupportModal() { const container = document.getElementById('support-links-container'); container.innerHTML = ''; appSettings.supportLinks.forEach(link => { if(link.url) { container.innerHTML += `<a href="${link.url}" target="_blank" class="support-link-button"><i class="${link.icon || 'fas fa-question-circle'}"></i><span>${link.name || 'Support'}</span></a>`; } }); }
         function generateWheelSections() { const wheel = document.getElementById('wheel'); if (!wheel) return; wheel.innerHTML = ''; const colors = ['#3498db', '#e67e22', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c', '#34495e']; const angle = 360 / (spinPrizes.length || 8); spinPrizes.forEach((prize, index) => { const section = document.createElement('div'); section.className = 'wheel-section'; section.style.background = colors[index % colors.length]; section.style.transform = `rotate(${index * angle}deg)`; section.innerHTML = `<span style="transform: rotate(${angle / 2}deg) translateY(-100%)">${'৳' + prize}</span>`; wheel.appendChild(section); }); }
         
-        async function initializeUserData(user) {
-            const userRef = db.collection('users').doc(user.uid);
-            const userDoc = await userRef.get();
-            if (userDoc.exists) return userDoc.data();
-            
-            let ref = null;
-            let photoUrl = null;
-            try {
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) { 
-                    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                    if(tgUser && tgUser.photo_url) { photoUrl = tgUser.photo_url; }
-                    const initData = new URLSearchParams(window.Telegram.WebApp.initData); 
-                    if (initData.has('start_param')) { ref = initData.get('start_param'); }
-                } 
-            } catch(e) { console.error("Could not read Telegram data on initialization:", e); }
-            
-            if (!ref) { ref = new URLSearchParams(window.location.search).get('ref'); }
-            
-            const joiningBonus = ref ? (appSettings.joiningBonus || 0) : 0;
-            const newUserData = {
-                uid: user.uid, email: user.email, name: document.getElementById('register-name').value || user.displayName || 'ব্যবহারকারী',
-                phone: document.getElementById('register-phone').value || '', photo_url: photoUrl, balance: joiningBonus, todayEarnings: 0, totalEarnings: joiningBonus, 
-                referralEarnings: 0, adsCompleted: 0, tasksCompleted: [], spinsUsed: 0, lastSpinDate: null, referrals: 0, 
-                joinDate: new Date().toISOString(), referredBy: ref || null, isBanned: false
-            };
-            await userRef.set(newUserData);
+        async function initializeUserByTelegram(tgUser) {
+            const telegramId = tgUser.id.toString();
+            const userRef = db.collection('users').doc(telegramId);
+            let userDoc = await userRef.get();
 
-            if (ref) {
-                const referrerRef = db.collection('users').doc(ref);
-                const referralBonus = appSettings.referralBonus || 0;
-                await db.runTransaction(async (transaction) => {
-                    const doc = await transaction.get(referrerRef);
-                    if (doc.exists) {
-                        transaction.update(referrerRef, {
-                            balance: firebase.firestore.FieldValue.increment(referralBonus),
-                            referralEarnings: firebase.firestore.FieldValue.increment(referralBonus),
-                            referrals: firebase.firestore.FieldValue.increment(1)
-                        });
+            if (!userDoc.exists) {
+                let ref = null;
+                try {
+                    const initData = new URLSearchParams(window.Telegram.WebApp.initData);
+                    if (initData.has('start_param')) {
+                        ref = initData.get('start_param');
                     }
-                });
-                if (joiningBonus > 0) await addActivity('জয়েনিং বোনাস', joiningBonus);
-                if (referralBonus > 0) await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন এবং ৳${referralBonus} বোনাস পেয়েছেন।`, ref);
+                } catch(e) { console.error("Could not read start_param:", e); }
+
+                const joiningBonus = ref ? (appSettings.joiningBonus || 0) : 0;
+                const fullName = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim();
+
+                const newUserData = {
+                    telegramId: telegramId,
+                    uid: currentUser.uid, // Firebase anonymous UID for reference
+                    name: fullName || 'ব্যবহারকারী',
+                    photo_url: tgUser.photo_url || null,
+                    balance: joiningBonus,
+                    todayEarnings: 0,
+                    totalEarnings: joiningBonus,
+                    referralEarnings: 0,
+                    adsCompleted: 0,
+                    tasksCompleted: [],
+                    spinsUsed: 0,
+                    lastSpinDate: null,
+                    referrals: 0,
+                    joinDate: new Date().toISOString(),
+                    referredBy: ref || null,
+                    isBanned: false
+                };
+                await userRef.set(newUserData);
+                userDoc = await userRef.get(); // Re-fetch the document
+
+                if (ref) {
+                    const referrerRef = db.collection('users').doc(ref);
+                    const referralBonus = appSettings.referralBonus || 0;
+                    try {
+                        await db.runTransaction(async (transaction) => {
+                            const doc = await transaction.get(referrerRef);
+                            if (doc.exists) {
+                                transaction.update(referrerRef, {
+                                    balance: firebase.firestore.FieldValue.increment(referralBonus),
+                                    referralEarnings: firebase.firestore.FieldValue.increment(referralBonus),
+                                    referrals: firebase.firestore.FieldValue.increment(1)
+                                });
+                            }
+                        });
+                        if (joiningBonus > 0) await addActivity('জয়েনিং বোনাস', joiningBonus, telegramId);
+                        if (referralBonus > 0) await addNotification('রেফারেল বোনাস!', `আপনি একজন নতুন রেফারেল পেয়েছেন এবং ৳${referralBonus} বোনাস পেয়েছেন।`, ref);
+                    } catch (e) { console.error("Referral transaction failed:", e); }
+                }
             }
-            return newUserData;
+            return userDoc.data();
         }
-        
-        const listenToUserData = (uid) => { if (userListener) userListener(); userListener = db.collection('users').doc(uid).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
+
+        const listenToUserData = (telegramId) => { if (userListener) userListener(); userListener = db.collection('users').doc(telegramId).onSnapshot((doc) => { if (doc.exists) { userData = doc.data(); updateAllUI(); } }); };
         
         async function loadWithdrawalHistory() {
             const historyContainer = document.getElementById('withdrawal-history');
-            if (!currentUser) { historyContainer.innerHTML = ''; return; }
+            if (!userData) { historyContainer.innerHTML = ''; return; }
             historyContainer.innerHTML = '<p>হিস্টোরি লোড হচ্ছে...</p>';
             try {
-                const snapshot = await db.collection('withdrawals').where('userId', '==', currentUser.uid).limit(20).get();
+                const snapshot = await db.collection('withdrawals').where('userId', '==', userData.telegramId).limit(20).get();
                 if (snapshot.empty) { historyContainer.innerHTML = '<p class="text-center">আপনার কোনো উত্তোলনের রেকর্ড নেই।</p>'; return; }
                 const withdrawals = snapshot.docs.map(doc => doc.data());
                 withdrawals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -292,8 +276,8 @@
             }
         }
 
-        async function addActivity(title, amount) { if (amount > 0) { await db.collection('activities').add({ userId: currentUser.uid, title, amount, timestamp: new Date().toISOString() }); } }
-        async function addNotification(title, message, forUserId = null) { await db.collection('notifications').add({ userId: forUserId || currentUser.uid, title, message, timestamp: new Date().toISOString(), read: false }); }
+        async function addActivity(title, amount, forUserId) { if (amount > 0) { await db.collection('activities').add({ userId: forUserId || userData.telegramId, title, amount, timestamp: new Date().toISOString() }); } }
+        async function addNotification(title, message, forUserId = null) { await db.collection('notifications').add({ userId: forUserId || userData.telegramId, title, message, timestamp: new Date().toISOString(), read: false }); }
 
         function updateAllUI() {
             if (!userData || !appSettings) return;
@@ -304,12 +288,17 @@
             document.getElementById('header-user-name').textContent = userData.name;
             document.getElementById('profile-pic-img').src = userData.photo_url || 'https://i.ibb.co/6y4n3SM/default-avatar.png';
             document.getElementById('profile-name-text').textContent = userData.name || 'ব্যবহারকারী';
-            document.getElementById('profile-email-display').textContent = `ইমেইল: ${userData.email || 'N/A'}`;
-            document.getElementById('profile-phone-display').textContent = `ফোন: ${userData.phone || 'N/A'}`;
+            document.getElementById('profile-telegram-id-display').textContent = `টেলিগ্রাম আইডি: ${userData.telegramId}`;
             if(userData.joinDate) { document.getElementById('profile-join-date').textContent = `যোগদান: ${new Date(userData.joinDate).toLocaleDateString('bn-BD')}`; }
+            
             let referralLink = '';
-            if (appSettings.botUsername && appSettings.appShortName) { referralLink = `https://t.me/${appSettings.botUsername}/${appSettings.appShortName}?startapp=${currentUser.uid}`; } else { referralLink = `${window.location.origin}${window.location.pathname}?ref=${currentUser.uid}`; }
+            if (appSettings.botUsername && appSettings.appShortName) {
+                referralLink = `https://t.me/${appSettings.botUsername}/${appSettings.appShortName}?startapp=${userData.telegramId}`;
+            } else {
+                referralLink = `${window.location.origin}${window.location.pathname}?ref=${userData.telegramId}`;
+            }
             document.getElementById('referral-link').value = referralLink;
+
             document.getElementById('profile-tasks').textContent = (userData.tasksCompleted || []).filter(key => key.endsWith(new Date().toDateString())).length;
             document.getElementById('profile-referrals').textContent = userData.referrals || 0;
             document.getElementById('min-withdrawal-text').textContent = (appSettings.minWithdrawal || 50).toFixed(2);
@@ -323,7 +312,7 @@
             const userReferrals = userData.referrals || 0; const userBalance = userData.balance || 0; const minReferrals = appSettings.minReferrals || 0; const minBalance = appSettings.minBalance || 0; const referralsMet = userReferrals >= minReferrals; const balanceMet = userBalance >= minBalance;
             conditionsContainer.innerHTML = `<p class="flex justify-between"><span>ন্যূনতম রেফারেল:</span><span class="${referralsMet ? 'text-green-600' : 'text-red-600'} font-bold">${userReferrals} / ${minReferrals} ${referralsMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span></p><p class="flex justify-between"><span>ন্যূনতম ব্যালেন্স:</span><span class="${balanceMet ? 'text-green-600' : 'text-red-600'} font-bold">৳${userBalance.toFixed(2)} / ৳${minBalance.toFixed(2)} ${balanceMet ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</span></p>`;
             const today = new Date().toDateString();
-            if (userData.lastSpinDate !== today) { db.collection('users').doc(currentUser.uid).update({ spinsUsed: 0, lastSpinDate: today }); }
+            if (userData.lastSpinDate !== today) { db.collection('users').doc(userData.telegramId).update({ spinsUsed: 0, lastSpinDate: today }); }
             const spinsUsed = userData.spinsUsed || 0;
             document.getElementById('spins-left').textContent = (appSettings.dailySpins || 3) - spinsUsed;
             document.getElementById('spin-wheel-btn').disabled = spinsUsed >= (appSettings.dailySpins || 3);
@@ -380,10 +369,10 @@
         
         async function updateRecentActivities() {
             const container = document.getElementById('recent-activity');
-            if (!currentUser) { container.innerHTML = ''; return; }
+            if (!userData) { container.innerHTML = ''; return; }
             container.innerHTML = '<p class="text-center">লোড হচ্ছে...</p>';
             try {
-                const snapshot = await db.collection('activities').where('userId', '==', currentUser.uid).limit(5).get();
+                const snapshot = await db.collection('activities').where('userId', '==', userData.telegramId).limit(5).get();
                 if (snapshot.empty) { container.innerHTML = '<p class="text-center">কোনো সাম্প্রতিক কার্যক্রম নেই।</p>'; return; }
                 const activities = snapshot.docs.map(doc => doc.data());
                 activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -399,7 +388,6 @@
 
         async function initializeAdNetworks(collectionName) { const ref = db.collection(collectionName); const snap = await ref.limit(1).get(); if (snap.empty) { const batch = db.batch(); batch.set(ref.doc('monetag'), { name: 'Monetag', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('gigapub'), { name: 'Gigapub', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); batch.set(ref.doc('adexora'), { name: 'Adexora', isActive: false, zones: [{ id: 'YOUR_ID', reward: 0, isActive: false }] }); await batch.commit(); } }
         
-        // ##### START: MODIFIED CODE #####
         async function loadAdScriptsAndSettings(collectionName) {
             const networksSnapshot = await db.collection(collectionName).get();
             const groupedAds = {};
@@ -424,7 +412,6 @@
                                     document.head.appendChild(script);
                                 } 
                                 else if (doc.id === 'gigapub') {
-                                    // Gigapub-এর জন্য নির্ভরযোগ্য স্ক্রিপ্ট লোডার
                                     script.textContent = `
                                     (function(){
                                         var projectId = "${zone.id}";
@@ -478,66 +465,13 @@
             finalAdQueue.push(...interleavedRest);
             return { ads: finalAdQueue };
         }
-        // ##### END: MODIFIED CODE #####
 
         async function showMandatoryAdAfterAction(adQueue) { return new Promise(async (resolve, reject) => { if (!adQueue || adQueue.length === 0) { return resolve(); } const waitForSdk = (ad, timeout = 7000) => new Promise((resolveSdk, rejectSdk) => { const getRunner = () => { if (ad.type === 'monetag') return window[`show_${ad.zoneId}`]; if (ad.type === 'adexora') return window.showAdexora; if (ad.type === 'gigapub') return window.showGiga; return null; }; if (typeof getRunner() === 'function') return resolveSdk(getRunner()); const start = Date.now(); const interval = setInterval(() => { const runnerNow = getRunner(); if (typeof runnerNow === 'function') { clearInterval(interval); resolveSdk(runnerNow); } else if (Date.now() - start > timeout) { clearInterval(interval); rejectSdk(new Error(`${ad.type} SDK লোড হতে ব্যর্থ।`)); } }, 500); }); try { for (const ad of adQueue) { const adRunner = await waitForSdk(ad); const result = adRunner(); if (result && typeof result.then === 'function') { await result; } } resolve(); } catch (error) { console.error('Ad error:', error); reject(error); } }); }
 
         document.addEventListener('DOMContentLoaded', () => {
             // Profile Edit Logic
             document.getElementById('edit-name-btn').addEventListener('click', () => { document.getElementById('name-display-container').classList.add('hidden'); document.getElementById('name-edit-container').classList.remove('hidden'); document.getElementById('profile-name-input').value = userData.name; document.getElementById('profile-name-input').focus(); });
-            document.getElementById('save-name-btn').addEventListener('click', async () => { const newName = document.getElementById('profile-name-input').value.trim(); if (!newName) { alert("নাম খালি রাখা যাবে না।"); return; } const btn = document.getElementById('save-name-btn'); btn.disabled = true; btn.textContent = "সেভ হচ্ছে..."; try { await db.collection('users').doc(currentUser.uid).update({ name: newName }); alert("নাম সফলভাবে পরিবর্তন হয়েছে!"); } catch (error) { alert("একটি সমস্যা হয়েছে।"); } finally { document.getElementById('name-edit-container').classList.add('hidden'); document.getElementById('name-display-container').classList.remove('hidden'); btn.disabled = false; btn.textContent = "সেভ করুন"; } });
-            
-            // Auth Form Logic
-            document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); switchToRegister(); });
-            document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); switchToLogin(); });
-            document.getElementById('forgot-password-link').addEventListener('click', async (e) => { e.preventDefault(); const email = prompt("পাসওয়ার্ড রিসেট করার জন্য আপনার রেজিস্টার্ড ইমেইলটি দিন:", ""); if (email) { try { await auth.sendPasswordResetEmail(email); alert("আপনার পাসওয়ার্ড রিসেট করার জন্য একটি লিংক আপনার ইমেইলে পাঠানো হয়েছে।\n\nঅনুগ্রহ করে আপনার ইমেইলের ইনবক্স চেক করুন। যদি ইনবক্সে ইমেইলটি খুঁজে না পান, তবে স্প্যাম (Spam) বা জাঙ্ক (Junk) ফোল্ডার চেক করতে ভুলবেন না।"); } catch (error) { alert("একটি সমস্যা হয়েছে। অনুগ্রহ করে সঠিক ইমেইল দিন।"); console.error("Password Reset Error:", error); } } });
-            document.getElementById('login-form-element').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = "প্রসেসিং...";
-                try {
-                    await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value);
-                } catch (err) {
-                    let message = "একটি অজানা সমস্যা হয়েছে।";
-                    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                        message = "আপনার ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
-                    }
-                    alert('লগ ইন ব্যর্থ: ' + message);
-                    btn.disabled = false;
-                    btn.textContent = "লগ ইন";
-                }
-            });
-            document.getElementById('register-form-element').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = "প্রসেসিং...";
-                const password = document.getElementById('register-password').value;
-                const confirmPassword = document.getElementById('register-confirm-password').value;
-                if (password !== confirmPassword) {
-                    alert("পাসওয়ার্ড দুটি মেলেনি। অনুগ্রহ করে আবার চেষ্টা করুন।");
-                    btn.disabled = false;
-                    btn.textContent = "রেজিস্টার";
-                    return;
-                }
-                try {
-                    const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, password);
-                    await cred.user.updateProfile({ displayName: document.getElementById('register-name').value });
-                } catch (err) {
-                    let message = "একটি অজানা সমস্যা হয়েছে।";
-                    if (err.code === 'auth/email-already-in-use') {
-                        message = "এই ইমেইল ঠিকানাটি দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রেজিস্টার করা আছে।";
-                    } else if (err.code === 'auth/weak-password') {
-                        message = "আপনার পাসওয়ার্ডটি খুবই দুর্বল। অনুগ্রহ করে কমপক্ষে ৬ অক্ষরের একটি শক্তিশালী পাসওয়ার্ড দিন।";
-                    } else if (err.code === 'auth/invalid-email') {
-                        message = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
-                    }
-                    alert('রেজিস্ট্রেশন ব্যর্থ: ' + message);
-                    btn.disabled = false;
-                    btn.textContent = "রেজিস্টার";
-                }
-            });
+            document.getElementById('save-name-btn').addEventListener('click', async () => { const newName = document.getElementById('profile-name-input').value.trim(); if (!newName) { alert("নাম খালি রাখা যাবে না।"); return; } const btn = document.getElementById('save-name-btn'); btn.disabled = true; btn.textContent = "সেভ হচ্ছে..."; try { await db.collection('users').doc(userData.telegramId).update({ name: newName }); alert("নাম সফলভাবে পরিবর্তন হয়েছে!"); } catch (error) { alert("একটি সমস্যা হয়েছে।"); } finally { document.getElementById('name-edit-container').classList.add('hidden'); document.getElementById('name-display-container').classList.remove('hidden'); btn.disabled = false; btn.textContent = "সেভ করুন"; } });
             
             // Navigation
             const sections = document.querySelectorAll('.content-section'), navItems = document.querySelectorAll('.nav-item'), navButtons = document.querySelectorAll('.nav-btn'); function navigateTo(sectionId) { sections.forEach(s => s.classList.remove('active')); document.getElementById(sectionId)?.classList.add('active'); navItems.forEach(n => n.classList.toggle('active', n.dataset.section === sectionId)); }
@@ -545,21 +479,21 @@
             navButtons.forEach(button => button.addEventListener('click', (e) => { e.preventDefault(); navigateTo(button.dataset.target); }));
 
             // App Actions
-            document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { await showMandatoryAdAfterAction(adSettings); const rewardAmount = appSettings.watchAdReward || 0; if (rewardAmount > 0) { const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(rewardAmount), todayEarnings: inc(rewardAmount), totalEarnings: inc(rewardAmount), adsCompleted: inc(1) }); await addActivity('বিজ্ঞাপন দেখা', rewardAmount); alert(`ধন্যবাদ! ৳${rewardAmount.toFixed(2)} যোগ করা হয়েছে।`); } } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
-            document.getElementById('tasks-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const taskId = btn.dataset.id; const taskKey = `${taskId}_${new Date().toDateString()}`; if (btn.classList.contains('do-task-btn')) { const link = btn.dataset.link; if (link) window.open(link, '_blank'); addTaskToClaim(taskId); updateTasksList(); } if (btn.classList.contains('claim-task-btn')) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; try { await showMandatoryAdAfterAction(taskAdSettings); const reward = parseFloat(btn.dataset.reward); const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(reward), todayEarnings: inc(reward), totalEarnings: inc(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক পুরস্কার', reward); removeTaskFromClaim(taskId); alert(`অভিনন্দন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Task claim ad failed:", error); alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { updateTasksList(); } } });
+            document.getElementById('watch-ad-btn').addEventListener('click', async function() { this.disabled = true; try { await showMandatoryAdAfterAction(adSettings); const rewardAmount = appSettings.watchAdReward || 0; if (rewardAmount > 0) { const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(userData.telegramId).update({ balance: inc(rewardAmount), todayEarnings: inc(rewardAmount), totalEarnings: inc(rewardAmount), adsCompleted: inc(1) }); await addActivity('বিজ্ঞাপন দেখা', rewardAmount); alert(`ধন্যবাদ! ৳${rewardAmount.toFixed(2)} যোগ করা হয়েছে।`); } } catch (e) { alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { this.disabled = false; } });
+            document.getElementById('tasks-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const taskId = btn.dataset.id; const taskKey = `${taskId}_${new Date().toDateString()}`; if (btn.classList.contains('do-task-btn')) { const link = btn.dataset.link; if (link) window.open(link, '_blank'); addTaskToClaim(taskId); updateTasksList(); } if (btn.classList.contains('claim-task-btn')) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; try { await showMandatoryAdAfterAction(taskAdSettings); const reward = parseFloat(btn.dataset.reward); const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(userData.telegramId).update({ balance: inc(reward), todayEarnings: inc(reward), totalEarnings: inc(reward), tasksCompleted: firebase.firestore.FieldValue.arrayUnion(taskKey) }); await addActivity('টাস্ক পুরস্কার', reward); removeTaskFromClaim(taskId); alert(`অভিনন্দন! ৳${reward.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Task claim ad failed:", error); alert('বিজ্ঞাপন দেখাতে একটি সমস্যা হয়েছে।'); } finally { updateTasksList(); } } });
             const spinButton = document.getElementById('spin-wheel-btn'), wheel = document.getElementById('wheel'); let isSpinning = false;
-            spinButton.addEventListener('click', async function() { if (isSpinning || spinPrizes.length === 0) return; const dailySpinLimit = appSettings.dailySpins || 3; if (userData.spinsUsed >= dailySpinLimit) { alert('আপনি আজকের সব স্পিন ব্যবহার করেছেন!'); return; } isSpinning = true; spinButton.disabled = true; const prizeIndex = Math.floor(Math.random() * spinPrizes.length); const prizeAmount = spinPrizes[prizeIndex]; const sectionAngle = 360 / spinPrizes.length; const randomSpins = Math.floor(Math.random() * 5) + 5; const targetAngle = (randomSpins * 360) + (360 - (prizeIndex * sectionAngle) - (sectionAngle / 2)); wheel.style.transition = 'transform 6s cubic-bezier(0.1, 0.7, 0.0, 1)'; wheel.style.transform = `rotate(${targetAngle}deg)`; setTimeout(async () => { alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে বিজ্ঞাপন দেখুন।`); let adWasSuccessful = false; try { await showMandatoryAdAfterAction(spinAdSettings); adWasSuccessful = true; const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(currentUser.uid).update({ balance: inc(prizeAmount), todayEarnings: inc(prizeAmount), totalEarnings: inc(prizeAmount), spinsUsed: inc(1) }); await addActivity('স্পিন থেকে আয়', prizeAmount); alert(`সফল! আপনার অ্যাকাউন্টে ৳${prizeAmount.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Spin ad failed:", error); alert('দুঃখিত, বিজ্ঞাপনটি দেখানো যায়নি। পুরস্কার যোগ করা সম্ভব হয়নি। আপনার স্পিনটি নষ্ট হবে না, আবার চেষ্টা করুন।'); } finally { wheel.style.transition = 'none'; wheel.style.transform = `rotate(${targetAngle % 360}deg)`; isSpinning = false; const spinsAfterAttempt = userData.spinsUsed + (adWasSuccessful ? 1 : 0); spinButton.disabled = spinsAfterAttempt >= dailySpinLimit; if (adWasSuccessful && spinsAfterAttempt >= dailySpinLimit) { alert('আপনার আজকের স্পিন শেষ।'); } } }, 6000); });
+            spinButton.addEventListener('click', async function() { if (isSpinning || spinPrizes.length === 0) return; const dailySpinLimit = appSettings.dailySpins || 3; if (userData.spinsUsed >= dailySpinLimit) { alert('আপনি আজকের সব স্পিন ব্যবহার করেছেন!'); return; } isSpinning = true; spinButton.disabled = true; const prizeIndex = Math.floor(Math.random() * spinPrizes.length); const prizeAmount = spinPrizes[prizeIndex]; const sectionAngle = 360 / spinPrizes.length; const randomSpins = Math.floor(Math.random() * 5) + 5; const targetAngle = (randomSpins * 360) + (360 - (prizeIndex * sectionAngle) - (sectionAngle / 2)); wheel.style.transition = 'transform 6s cubic-bezier(0.1, 0.7, 0.0, 1)'; wheel.style.transform = `rotate(${targetAngle}deg)`; setTimeout(async () => { alert(`অভিনন্দন! আপনি ৳${prizeAmount} জিতেছেন।\nপুরস্কার পেতে বিজ্ঞাপন দেখুন।`); let adWasSuccessful = false; try { await showMandatoryAdAfterAction(spinAdSettings); adWasSuccessful = true; const inc = firebase.firestore.FieldValue.increment; await db.collection('users').doc(userData.telegramId).update({ balance: inc(prizeAmount), todayEarnings: inc(prizeAmount), totalEarnings: inc(prizeAmount), spinsUsed: inc(1) }); await addActivity('স্পিন থেকে আয়', prizeAmount); alert(`সফল! আপনার অ্যাকাউন্টে ৳${prizeAmount.toFixed(2)} যোগ করা হয়েছে।`); } catch (error) { console.error("Spin ad failed:", error); alert('দুঃখিত, বিজ্ঞাপনটি দেখানো যায়নি। পুরস্কার যোগ করা সম্ভব হয়নি। আপনার স্পিনটি নষ্ট হবে না, আবার চেষ্টা করুন।'); } finally { wheel.style.transition = 'none'; wheel.style.transform = `rotate(${targetAngle % 360}deg)`; isSpinning = false; const spinsAfterAttempt = userData.spinsUsed + (adWasSuccessful ? 1 : 0); spinButton.disabled = spinsAfterAttempt >= dailySpinLimit; if (adWasSuccessful && spinsAfterAttempt >= dailySpinLimit) { alert('আপনার আজকের স্পিন শেষ।'); } } }, 6000); });
             
             // Withdrawal Modal
             const withdrawModal = document.getElementById('withdraw-modal'); const showWithdrawModal = () => { withdrawModal.style.display = 'flex'; };
             document.getElementById('withdraw-btn-home').addEventListener('click', showWithdrawModal);
             document.getElementById('wallet-withdraw-btn').addEventListener('click', showWithdrawModal);
             document.getElementById('cancel-withdraw').addEventListener('click', () => withdrawModal.style.display = 'none');
-            document.getElementById('withdraw-form').addEventListener('submit', async (e) => { e.preventDefault(); const amount = parseFloat(document.getElementById('withdraw-amount').value); const method = document.getElementById('withdraw-method').value; const number = document.getElementById('withdraw-number').value; const userReferrals = userData.referrals || 0; const userBalance = userData.balance || 0; const minReferrals = appSettings.minReferrals || 0; const minBalanceForWithdrawal = appSettings.minBalance || 0; const minWithdrawalAmount = appSettings.minWithdrawal || 50; let errorMessages = []; if (userReferrals < minReferrals) { errorMessages.push(`আপনার কমপক্ষে ${minReferrals}টি রেফারেল প্রয়োজন।`); } if (userBalance < minBalanceForWithdrawal) { errorMessages.push(`উত্তোলনের জন্য আপনার ব্যালেন্স কমপক্ষে ৳${minBalanceForWithdrawal.toFixed(2)} হতে হবে।`); } if (isNaN(amount) || amount <= 0) { errorMessages.push(`অনুগ্রহ করে সঠিক পরিমাণ লিখুন।`); } if (amount < minWithdrawalAmount) { errorMessages.push(`আপনি সর্বনিম্ন ৳${minWithdrawalAmount.toFixed(2)} উত্তোলন করতে পারবেন।`); } if (amount > userBalance) { errorMessages.push(`আপনার অ্যাকাউন্টে পর্যাপ্ত ব্যালেন্স নেই।`); } if (errorMessages.length > 0) { alert("উত্তোলন করা সম্ভব নয়:\n\n" + errorMessages.join("\n")); return; } const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; try { await db.runTransaction(async (t) => { const userRef = db.collection('users').doc(currentUser.uid); const withdrawalRef = db.collection('withdrawals').doc(); const userDoc = await t.get(userRef); if (!userDoc.exists || userDoc.data().balance < amount) throw "Insufficient balance!"; t.set(withdrawalRef, { userId: currentUser.uid, userName: userData.name, amount, method, number, status: 'pending', timestamp: new Date().toISOString() }); t.update(userRef, { balance: firebase.firestore.FieldValue.increment(-amount) }); }); withdrawModal.style.display = 'none'; document.getElementById('withdraw-form').reset(); alert('উত্তোলনের অনুরোধ সফলভাবে পাঠানো হয়েছে!'); } catch (error) { console.error("Withdrawal failed:", error); alert('উত্তোলনের অনুরোধ পাঠাতে একটি সমস্যা হয়েছে।'); } finally { btn.disabled = false; } });
+            document.getElementById('withdraw-form').addEventListener('submit', async (e) => { e.preventDefault(); const amount = parseFloat(document.getElementById('withdraw-amount').value); const method = document.getElementById('withdraw-method').value; const number = document.getElementById('withdraw-number').value; const userReferrals = userData.referrals || 0; const userBalance = userData.balance || 0; const minReferrals = appSettings.minReferrals || 0; const minBalanceForWithdrawal = appSettings.minBalance || 0; const minWithdrawalAmount = appSettings.minWithdrawal || 50; let errorMessages = []; if (userReferrals < minReferrals) { errorMessages.push(`আপনার কমপক্ষে ${minReferrals}টি রেফারেল প্রয়োজন।`); } if (userBalance < minBalanceForWithdrawal) { errorMessages.push(`উত্তোলনের জন্য আপনার ব্যালেন্স কমপক্ষে ৳${minBalanceForWithdrawal.toFixed(2)} হতে হবে।`); } if (isNaN(amount) || amount <= 0) { errorMessages.push(`অনুগ্রহ করে সঠিক পরিমাণ লিখুন।`); } if (amount < minWithdrawalAmount) { errorMessages.push(`আপনি সর্বনিম্ন ৳${minWithdrawalAmount.toFixed(2)} উত্তোলন করতে পারবেন।`); } if (amount > userBalance) { errorMessages.push(`আপনার অ্যাকাউন্টে পর্যাপ্ত ব্যালেন্স নেই।`); } if (errorMessages.length > 0) { alert("উত্তোলন করা সম্ভব নয়:\n\n" + errorMessages.join("\n")); return; } const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; try { await db.runTransaction(async (t) => { const userRef = db.collection('users').doc(userData.telegramId); const withdrawalRef = db.collection('withdrawals').doc(); const userDoc = await t.get(userRef); if (!userDoc.exists || userDoc.data().balance < amount) throw "Insufficient balance!"; t.set(withdrawalRef, { userId: userData.telegramId, userName: userData.name, amount, method, number, status: 'pending', timestamp: new Date().toISOString() }); t.update(userRef, { balance: firebase.firestore.FieldValue.increment(-amount) }); }); withdrawModal.style.display = 'none'; document.getElementById('withdraw-form').reset(); alert('উত্তোলনের অনুরোধ সফলভাবে পাঠানো হয়েছে!'); } catch (error) { console.error("Withdrawal failed:", error); alert('উত্তোলনের অনুরোধ পাঠাতে একটি সমস্যা হয়েছে।'); } finally { btn.disabled = false; } });
             
             // Copy buttons
             document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('referral-link').value).then(() => alert('রেফারেল লিঙ্ক কপি করা হয়েছে!')));
-            document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+            document.getElementById('logout-btn').addEventListener('click', () => { if(confirm('আপনি কি লগ আউট করতে চান?')){ auth.signOut().then(() => { alert("লগ আউট সফল হয়েছে। অ্যাপটি রিলোড করুন।"); window.location.reload(); }); } });
             
             // Modals Close Logic
             const welcomeModal = document.getElementById('welcome-modal');
@@ -583,44 +517,47 @@
             });
         });
 
-        // Main Auth State Change Listener
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                if(window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.ready();
+        // Main App Initialization
+        async function initializeApp() {
+            try {
+                if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe.user) {
+                    document.getElementById('loader').innerHTML = '<p class="loader-text" style="color: red; text-align: center; padding: 20px;">এই অ্যাপটি শুধু টেলিগ্রামের ভেতরেই ব্যবহার করা যাবে।</p>';
+                    return;
                 }
                 
-                await loadAppSettings();
-                userData = await initializeUserData(user);
+                window.Telegram.WebApp.ready();
+                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
 
-                if (!userData.photo_url && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-                    try {
-                        const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                        if (tgUser && tgUser.photo_url) {
-                            const userRef = db.collection('users').doc(user.uid);
-                            await userRef.update({ photo_url: tgUser.photo_url });
-                            userData.photo_url = tgUser.photo_url;
-                        }
-                    } catch (e) {
-                        console.error("Could not update Telegram photo URL on load:", e);
-                    }
+                await auth.signInAnonymously();
+                currentUser = auth.currentUser;
+
+                await loadAppSettings();
+                userData = await initializeUserByTelegram(tgUser);
+                
+                if (userData.isBanned) {
+                    alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।');
+                    return;
                 }
                 
-                if (userData.isBanned) { alert('আপনার অ্যাকাউন্টটি সাসপেন্ড করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।'); auth.signOut(); return; }
                 showMainApp();
+                listenToUserData(userData.telegramId);
+
                 const adCollections = ['ad_networks', 'spin_ads', 'task_ads'];
                 const [watchAdResult, spinAdResult, taskAdResult] = await Promise.all(adCollections.map(c => loadAdScriptsAndSettings(c)));
-                adSettings = watchAdResult.ads; spinAdSettings = spinAdResult.ads; taskAdSettings = taskAdResult.ads;
+                adSettings = watchAdResult.ads; 
+                spinAdSettings = spinAdResult.ads; 
+                taskAdSettings = taskAdResult.ads;
+                
                 await Promise.all(adCollections.map(c => initializeAdNetworks(c)));
-                listenToUserData(user.uid);
-            } else {
-                currentUser = null; userData = null; if (userListener) userListener();
-                sessionStorage.removeItem('welcomeShown');
-                sessionStorage.removeItem('tasksToClaim');
-                showAuthSection();
+
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                document.getElementById('loader').innerHTML = `<p class="loader-text" style="color: red; text-align: center; padding: 20px;">অ্যাপ চালু হতে একটি সমস্যা হয়েছে।<br>${error.message}</p>`;
             }
-        });
+        }
+        
+        initializeApp();
+
     </script>
 </body>
 </html>
